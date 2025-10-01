@@ -3,12 +3,10 @@
 #include <algorithm>
 #include <cassert>
 #include <future>
-#include <iostream>
 
-void Matrix::setup(
+Matrix::Matrix(
     size_t m1_row, size_t m1_col, 
-    size_t m2_row, size_t m2_col) {
-    assert(m1_col == m2_row);
+    size_t m2_col, unsigned int threads) {
     _m1_row = m1_row;
     _m1_col = m1_col;
     _batch = m2_col;
@@ -19,10 +17,15 @@ void Matrix::setup(
     res: m1_row * batch (논리적으로 전치)
     */
     unsigned int MAX_T = std::thread::hardware_concurrency();
-    _threads = std::min(_threads, MAX_T);
+    _threads = std::min(threads, MAX_T);
     if(!_threads) _threads = 1;
 }
 
+Matrix::~Matrix() {
+    // 쓰레드 풀 정리 관련
+}
+
+// fix: vector -> span
 void Matrix::add(std::vector<fp32> &m_t, const std::vector<fp16> &b) {
     for(size_t i = 0; i< _batch; i++) {
         for(size_t j = 0; j< _m1_row; j++) {
@@ -31,7 +34,8 @@ void Matrix::add(std::vector<fp32> &m_t, const std::vector<fp16> &b) {
     }
 }
 
-void Matrix::multiply(
+// fix: vector -> span
+void Matrix::multiply( // unique_ptr로 살아있는 동안 쓰레드 풀 자체는 유지되게. 메모리 관리 위해 ~Matrix 정의 해둘 것.
     const std::vector<fp16> &w, const std::vector<fp16> &xt, 
     std::vector<fp32> &rt) {
 
@@ -44,7 +48,7 @@ void Matrix::multiply(
 
         const size_t cs = _batch / _threads;
         size_t offset = 0;
-        
+
         for (unsigned int i = 0; i< _threads; ++i) {
             // bs = current batch size
             // offset = current offset

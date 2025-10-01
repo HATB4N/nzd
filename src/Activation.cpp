@@ -3,13 +3,10 @@
 #include <algorithm>
 #include <cmath>
 
-void Activation::setup(size_t m1_row, size_t m1_col, size_t m2_row, size_t m2_col) {
-    // suppose that m2_col = 1
-    // ignore batch
-    assert(m1_col == m2_row);
+Activation::Activation(size_t m1_row, size_t m1_col, size_t batch) {
     _m1_row = m1_row;
     _m1_col = m1_col;
-    _batch = m2_col;
+    _batch = batch;
     /*
     m1_row * m1_col
     m1_col * 1 = m2_row * 1

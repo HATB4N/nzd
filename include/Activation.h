@@ -10,7 +10,7 @@ using fp32 = std::float32_t;
 
 class Activation {
 public:
-    void setup(size_t m1_row, size_t m1_col, size_t m2_row, size_t m2_col);
+    Activation(size_t m1_row, size_t m1_col, size_t batch);
     void softmax(std::vector<fp32> &m1);
     void sigmoid(std::vector<fp32> &m1);
     void silu(std::vector<fp32> &m1);
