@@ -44,3 +44,14 @@ void Activation::silu(std::vector<fp32> &m1_t) {
     
 }
 
+void Activation::relu(std::vector<fp32> &m1) {
+    for(size_t i = 0; i< _m1_row*_batch; ++i) {
+        m1[i] = std::max(fp32(0.0f), m1[i]);
+    }
+}
+
+void Activation::l_relu(std::vector<fp32> &m1) {
+    for(size_t i = 0; i< _m1_row*_batch; ++i) {
+        m1[i] = std::max(0.01f*m1[i], m1[i]); // fix to variable(0.01f)
+    }   
+}

@@ -10,15 +10,15 @@
 using fp16 = std::float16_t;
 using fp32 = std::float32_t;
 
-class Matrix {
+class Matrix { // 생성자, 소멸자로 thread pool을 static 두는 것도 좋을 듯?
 public:
     void setup(size_t m1_row, size_t m1_col, size_t m2_row, size_t m2_col);
-    void forward(const std::vector<fp16> &w, const std::vector<fp16> &x, 
-        const std::vector<fp16> &b, std::vector<fp32> &res);
-
+    void add(std::vector<fp32> &m_t, const std::vector<fp16> &b);
+    void multiply(const std::vector<fp16> &w, const std::vector<fp16> &xt, 
+        std::vector<fp32> &rt);
 private:
     void product(std::span<const fp16> w, std::span<const fp16> xt, 
-        std::span<const fp16> b, std::span<fp32> rt, size_t batch_p);
+        std::span<fp32> rt, size_t batch_p);
     
     unsigned int _threads = 8; // given by argv (fix)
     size_t _m1_row, _m1_col, _batch;

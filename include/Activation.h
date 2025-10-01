@@ -14,6 +14,8 @@ public:
     void softmax(std::vector<fp32> &m1);
     void sigmoid(std::vector<fp32> &m1);
     void silu(std::vector<fp32> &m1);
+    void relu(std::vector<fp32> &m1);
+    void l_relu(std::vector<fp32> &m1);
 
 private:
     size_t _m1_row, _m1_col, _batch;
