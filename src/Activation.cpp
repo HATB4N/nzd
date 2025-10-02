@@ -3,20 +3,10 @@
 #include <algorithm>
 #include <cmath>
 
-Activation::Activation(size_t m1_row, size_t m1_col, size_t batch) {
-    _m1_row = m1_row;
-    _m1_col = m1_col;
-    _batch = batch;
-    /*
-    m1_row * m1_col
-    m1_col * 1 = m2_row * 1
-    */
-}
-
-void Activation::softmax(std::vector<fp32> &m1_t) {
-    // O(n)
-    for(size_t i = 0; i< _m1_row; ++i) {
-        auto start = m1_t.begin() + i * _batch;
+void Act::softmax(Matrix_T<fp32> &m1_t) {
+    size_t _batch = m1_t.col();
+    for(size_t i = 0; i< m1_t.row(); ++i) {
+        auto start = m1_t.data(View::T).begin() + i * _batch;
         auto end = start + _batch;
         fp32 max = *std::max_element(start, end);
         fp32 sum = 0.0f;
@@ -33,22 +23,31 @@ void Activation::softmax(std::vector<fp32> &m1_t) {
     }
 }
 
-void Activation::sigmoid(std::vector<fp32> &m1_t) {
-
-}
-
-void Activation::silu(std::vector<fp32> &m1_t) {
-    
-}
-
-void Activation::relu(std::vector<fp32> &m1) {
-    for(size_t i = 0; i< _m1_row*_batch; ++i) {
-        m1[i] = std::max(fp32(0.0f), m1[i]);
+void Act::relu(Matrix_T<fp32> &m1) {
+    for(size_t i = 0; i< m1.size(); ++i) {
+        m1.data(View::T)[i] = std::max(fp32(0.0f), m1.data(View::T)[i]);
     }
 }
 
-void Activation::l_relu(std::vector<fp32> &m1) {
-    for(size_t i = 0; i< _m1_row*_batch; ++i) {
-        m1[i] = std::max(0.01f*m1[i], m1[i]); // fix to variable(0.01f)
+void Act::l_relu(Matrix_T<fp32> &m1) {
+    for(size_t i = 0; i< m1.size(); ++i) {
+        m1.data(View::T)[i] = std::max(0.01f*m1.data(View::T)[i], m1.data(View::T)[i]); // fix to variable(0.01f)
     }   
+}
+
+void ActDifr::difr_softmax(Matrix_T<fp32> &m1) {
+
+}
+
+void ActDifr::difr_relu(Matrix_T<fp32> &m1) {
+    for(size_t i = 0; i< m1.size(); ++i) {
+        m1.data(View::T)[i] = (fp32)(m1.data(View::T)[i]> 0);
+    }
+}
+
+void ActDifr::difr_l_relu(Matrix_T<fp32> &m1) {
+    for(size_t i = 0; i< m1.size(); ++i) {
+        auto t = m1.data(View::T)[i]; 
+        m1.data(View::T)[i] = (t> 0) ? 0.01f : 1.0f;
+    }
 }

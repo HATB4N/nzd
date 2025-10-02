@@ -10,7 +10,7 @@ public:
 
 private:
     size_t _nol;
-    std::vector<std::unique_ptr<DenseLayer>> _layers;
+    // std::vector<std::unique_ptr<DenseLayer>> _layers;
 
 };
 

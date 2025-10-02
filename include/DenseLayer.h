@@ -11,18 +11,15 @@ using fp32 = std::float32_t;
 
 class DenseLayer {
 public:
-    DenseLayer(size_t row, size_t col, size_t batch, unsigned int threads);
+    DenseLayer(unsigned int threads, void(*act)(Matrix_T<fp32>&));
     ~DenseLayer() = default;
-    // wip
-    void forward();
+    void forward(Matrix_T<fp16> &w, Matrix_T<fp16> &x, Matrix_T<fp16> &b, Matrix_T<fp32> &r);
     void backward();
     void update();
 
 private:
     std::unique_ptr<Matrix> _gemm;
-    std::unique_ptr<Activation> _activator;
-    fp16 random_float(float fmin, float fmax);
-    size_t _r, _c, _b;
+    void (*_act)(Matrix_T<fp32> &);
     unsigned int _t;
 };
 
