@@ -35,6 +35,12 @@ void Act::l_relu(Matrix_T<fp32> &m1) {
     }   
 }
 
+void ActDifr::difr_linear(Matrix_T<fp32> &m1) {
+    for(size_t i = 0; i< m1.size(); ++i) {
+        m1.data(View::T)[i] = (fp32)1.0f;
+    }    
+}
+
 void ActDifr::difr_softmax(Matrix_T<fp32> &m1) {
 
 }

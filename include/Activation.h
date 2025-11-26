@@ -10,6 +10,7 @@ using fp16 = std::float16_t;
 using fp32 = std::float32_t;
 
 namespace Act {
+    void inline linear(Matrix_T<fp32> &m1) { return; }
     void softmax(Matrix_T<fp32> &m1);
     void sigmoid(Matrix_T<fp32> &m1);
     void silu(Matrix_T<fp32> &m1);
@@ -18,6 +19,7 @@ namespace Act {
 };
 
 namespace ActDifr {
+    void difr_linear(Matrix_T<fp32> &m1);
     void difr_softmax(Matrix_T<fp32> &m1);
     void difr_sigmoid(Matrix_T<fp32> &m1);
     void difr_silu(Matrix_T<fp32> &m1);

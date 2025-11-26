@@ -16,15 +16,9 @@ enum class View { NT, T };
 template <typename T>
 class Matrix_T {
 public:
-    Matrix_T(size_t row, size_t col, Ori init = Ori::NT) {
-        _row = row;
-        _col = col;
-        _primary = init;
-        get_NT = false;
-        get_T = false;
-        expired_NT = false;
-        expired_T = false;
-    }
+    Matrix_T(size_t row, size_t col, Ori init = Ori::NT)
+    : _row(row), _col(col), _primary(init) {} // I just learn this cool init method
+
     size_t size() const { return _row * _col; }
     size_t row() const { return _row; }
     size_t col() const { return _col; }

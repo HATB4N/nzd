@@ -3,5 +3,5 @@ obj
 NZD
 todo.md
 .vscode
-src/main.cpp
+# src/main.cpp
 # currently main.cpp works as test code. nothing to see.
