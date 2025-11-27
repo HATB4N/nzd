@@ -2,7 +2,8 @@
 #include "Struct.h"
 #include <algorithm>
 
-DenseLayer::DenseLayer(unsigned int threads, 
+DenseLayer::DenseLayer(
+    unsigned int threads, 
     void(*act)(Matrix_T<fp32>&), 
     size_t input_dim, 
     size_t output_dim, 
@@ -18,7 +19,7 @@ DenseLayer::DenseLayer(unsigned int threads,
 
     // init, 학습(중) 여부 따라 호출 여부 정하게.
     _initializer->initialize(_weights, _input_dim, _output_dim);
-
+    
     // 일단 b 0으로
     std::fill(_biases.data(View::NT).begin(), _biases.data(View::NT).end(), static_cast<fp16>(0.0f));
 }
