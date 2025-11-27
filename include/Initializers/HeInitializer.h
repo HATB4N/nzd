@@ -6,7 +6,6 @@
 #include <cmath>
 #include <cassert>
 
-// 테스트용
 class HeInitializer : public IWeightInitializer {
 public:
     void initialize(Matrix_T<fp16>& weights, size_t input_dim, size_t output_dim) const override {
