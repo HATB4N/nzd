@@ -7,6 +7,7 @@
 #include "Initializers/IWeightInitializer.h"
 #include <memory>
 #include <vector>
+#include <cstdint>
 
 using fp16 = std::float16_t;
 using fp32 = std::float32_t;
@@ -23,6 +24,14 @@ public:
     void forward(const Matrix_T<fp16> &x, Matrix_T<fp32> &r);
     void backward();
     void update();
+    Matrix_T<fp16>& get_weight();
+    Matrix_T<fp16>& get_bias();
+    void set_weight(const Matrix_T<fp16>& new_weights);
+    void set_bias(const Matrix_T<fp16>& new_biases);
+    uint8_t act_enum = 1; // 이거 임시임.
+    // 초기화시에 활성화함수를 직접 받는게 아니라
+    // 열거형으로 받아서 알아서 code영역 참조하게
+    // 일단 했다고 가정.
 
 private:
     Matrix_T<fp16> _weights;

@@ -19,6 +19,14 @@ public:
     Matrix_T(size_t row, size_t col, Ori init = Ori::NT)
     : _row(row), _col(col), _primary(init) {} // I just learn this cool init method
 
+    // load parms에서 사용하는 생성자임.
+    Matrix_T(size_t row, size_t col, const std::vector<T>& data_vec, Ori init = Ori::NT)
+    : _m(data_vec), get_NT(true), _row(row), _col(col), _primary(init) {
+        if (data_vec.size() != row * col) {
+            throw std::invalid_argument("data_vec size does not match row * col");
+        }
+    }
+
     size_t size() const { return _row * _col; }
     size_t row() const { return _row; }
     size_t col() const { return _col; }
@@ -80,7 +88,6 @@ private:
     Ori _primary;
 
     void _transpose_from_nt() { // _m_t를 채우는 것
-        std::cout << "tfnt" << std::endl;
         if (_m_t.size() != size()) _m_t.resize(size());
         for(size_t r = 0; r< _row; ++r) {
             for(size_t c = 0; c< _col; ++c) {
