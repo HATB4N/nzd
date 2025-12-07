@@ -32,6 +32,6 @@ make
 - 레이어도 인터페이스화
 
 ## 참고
-파라미터 저장 방식
-`[NZD(magicbyte)][metadata len][metadata(about how to read the data)]` 하나 넣고\
-`[metadata len][metadata][data]`단위를 하위 함수에서 순차적으로 write함.
+- 파라미터 저장 방식
+    - `[NZD(magicbyte)][metadata len][metadata(about how to read the data)]` 하나 넣고(레이어들에 대한 정보)
+    - `[metadata len][metadata][data]`단위를 하위 함수에서 순차적으로 write함(하나의 레이어에 대한 정보).
