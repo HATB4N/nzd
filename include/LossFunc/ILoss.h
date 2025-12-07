@@ -1,7 +1,7 @@
 #ifndef ILOSS_H
 #define ILOSS_H
 
-#include "../Struct.h"
+#include "Common/Struct.h"
 class ILoss {
 public:
     virtual ~ILoss() = default;

@@ -153,7 +153,7 @@ int Model::load_unit_parms(std::ifstream& _fin) {
 
 static uint64_t read_uint64_t_big_endian(std::ifstream& fin) {
     uint64_t value = 0;
-    for (uint64_t i = 0; i < sizeof(uint64_t); ++i) {
+    for (uint64_t i = 0; i< sizeof(uint64_t); i++) {
         uint8_t byte;
         fin.read(reinterpret_cast<char*>(&byte), sizeof(byte));
         value = (value << 8) | byte;
