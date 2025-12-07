@@ -14,20 +14,20 @@ enum class View { NT, T };
 template <typename T>
 class Matrix_T {
 public:
-    Matrix_T(size_t row, size_t col, Ori init = Ori::NT, std::pmr::memory_resource* resource = std::pmr::get_default_resource())
+    Matrix_T(uint64_t row, uint64_t col, Ori init = Ori::NT, std::pmr::memory_resource* resource = std::pmr::get_default_resource())
     : _row(row), _col(col), _primary(init), _m(resource), _m_t(resource) {} // I just learn this cool init method
 
     // load parms에서 사용하는 생성자임.
-    Matrix_T(size_t row, size_t col, const std::vector<T>& data_vec, Ori init = Ori::NT, std::pmr::memory_resource* resource = std::pmr::get_default_resource())
+    Matrix_T(uint64_t row, uint64_t col, const std::vector<T>& data_vec, Ori init = Ori::NT, std::pmr::memory_resource* resource = std::pmr::get_default_resource())
     : _m(data_vec.begin(), data_vec.end(), resource), get_NT(true), _row(row), _col(col), _primary(init), _m_t(resource) {
         if (data_vec.size() != row * col) {
             throw std::invalid_argument("data_vec size does not match row * col");
         }
     }
 
-    size_t size() const { return _row * _col; }
-    size_t row() const { return _row; }
-    size_t col() const { return _col; }
+    uint64_t size() const { return _row * _col; }
+    uint64_t row() const { return _row; }
+    uint64_t col() const { return _col; }
     
     std::pmr::vector<T>& data(View view = View::NT) {
         if(view == View::NT) {
@@ -82,13 +82,13 @@ private:
     std::pmr::vector<T> _m_t;
     bool get_T = false, get_NT = false;
     bool expired_T = false, expired_NT = false;
-    size_t _row, _col; // based on _m (not _m_t)
+    uint64_t _row, _col; // based on _m (not _m_t)
     Ori _primary;
 
     void _transpose_from_nt() { // _m_t를 채우는 것
         if (_m_t.size() != size()) _m_t.resize(size());
-        for(size_t r = 0; r< _row; ++r) {
-            for(size_t c = 0; c< _col; ++c) {
+        for(uint64_t r = 0; r< _row; ++r) {
+            for(uint64_t c = 0; c< _col; ++c) {
                 _m_t[c*_row + r] = _m[r*_col + c];
             }
         }
@@ -98,8 +98,8 @@ private:
 
     void _transpose_from_t() { // _m을 채우는 것
         if (_m.size() != size()) _m.resize(size());
-        for(size_t r = 0; r< _row; ++r) {
-            for(size_t c = 0; c< _col; ++c) {
+        for(uint64_t r = 0; r< _row; ++r) {
+            for(uint64_t c = 0; c< _col; ++c) {
                 _m[r*_col + c] = _m_t[c*_row + r];
             }
         }

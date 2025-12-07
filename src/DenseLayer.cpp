@@ -5,16 +5,17 @@ DenseLayer::DenseLayer(ActFunc act_enum,
                        uint64_t input_dim, 
                        uint64_t output_dim, 
                        std::shared_ptr<IWeightInitializer> initializer,
-                       uint64_t idx) : _weights(input_dim, output_dim), _biases(1, output_dim), 
+                       uint64_t idx) : _idx(idx), // unique identifier of each layers. 나중에 구조체에 id - layer묶어서 관리하는게 편할듯. 일단 임시 ㅇㅇ
+                                       _weights(input_dim, output_dim), _biases(1, output_dim), 
                                        _grad_weights(input_dim, output_dim), _grad_biases(1, output_dim), 
                                        _initializer(std::move(initializer)),
                                        _input_dim(input_dim), _output_dim(output_dim),
-                                       _idx(idx),
                                        _act(resolve_act(act_enum)), _act_difr(resolve_act_difr(act_enum)), 
                                        _gemm(std::make_unique<Matrix>()) {                          
     if (_initializer) {
         _initializer->initialize(_weights, _input_dim, _output_dim);
-        _initializer->initialize(_biases, 1, _output_dim);
+        // _initializer->initialize(_biases, 1, _output_dim);
+        std::fill(_biases.data(View::NT).begin(), _biases.data(View::NT).end(), static_cast<fp16>(0.0f));
     }
 }
 

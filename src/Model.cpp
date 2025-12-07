@@ -33,8 +33,8 @@ void Model::init() {
     // 지금은 그냥 임시 고정값.
     const uint64_t input_dim = 768;
     const uint64_t output_dim = 10;
-    const uint64_t hidden_dim = 4096;
-    auto he = std::make_shared<HeInitializer>();
+    const uint64_t hidden_dim = 2048;
+    auto he = std::make_shared<HeInitializer>(1234);
 
     uint64_t last_dim = input_dim;
 
@@ -73,7 +73,7 @@ void Model::test() {
     // 전역으로 둬야 함. init에 맞게. 일단 테스트 코드
     const uint64_t input_dim = 768;
     const uint64_t output_dim = 10;
-    const uint64_t hidden_dim = 4096;
+    const uint64_t hidden_dim = 2048;
     const uint64_t batch_size = 128;
 
     // 일단 임시로 랜덤

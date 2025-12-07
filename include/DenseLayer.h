@@ -46,7 +46,7 @@ private:
     std::unique_ptr<Matrix> _gemm;
     void (*_act)(Matrix_T<fp32> &);
     void (*_act_difr)(Matrix_T<fp32> &);
-    uint64_t _idx;
+    const uint64_t _idx;
     std::shared_ptr<IWeightInitializer> _initializer;
 };
 
