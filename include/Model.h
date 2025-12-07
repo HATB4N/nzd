@@ -24,7 +24,7 @@ private:
     std::vector<std::unique_ptr<DenseLayer>> _layers;
     int save_unit_parms(uint64_t index, std::ofstream& _fout); // @ ModelIO.cpp
     int load_unit_parms(std::ifstream& _fin); // @ ModelIO.cpp
-    std::string base_dir = "data/parms.bin"; // init시 초기화시켜
+    std::string base_dir = "data/parms.nzd"; // init시 초기화시켜
 
 };
 

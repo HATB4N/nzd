@@ -8,7 +8,7 @@ int main() {
     // test code
     int i = 10;
     while(i--) {
-        Model model(128);
+        Model model(10);
         model.init();
         model.test();
     }

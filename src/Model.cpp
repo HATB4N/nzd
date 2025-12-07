@@ -33,24 +33,35 @@ void Model::init() {
     // 지금은 그냥 임시 고정값.
     const uint64_t input_dim = 768;
     const uint64_t output_dim = 10;
-    const uint64_t hidden_dim = 1024;
+    const uint64_t hidden_dim = 4096;
+    auto he = std::make_shared<HeInitializer>();
 
     uint64_t last_dim = input_dim;
 
     // index = 0 | input layer | linear
-    _layers.push_back(std::make_unique<DenseLayer>(t, &Act::relu, last_dim, hidden_dim, 0,
-            std::make_unique<HeInitializer>()));;
-    last_dim = hidden_dim;
+    _layers.push_back(
+        std::make_unique<DenseLayer>(ActFunc::LINEAR, 
+                                     last_dim, 
+                                     hidden_dim, 
+                                     he, 
+                                     _layers.size())); // 고유식별자임. 이 직렬화된 배열에서의 위치를 기반으로 나중에 그래프 구성. id -> datas (struct or class. idk)
 
     // index = (0, _nol) | hinnen layer | act
-    for (uint64_t i = 1; i< _nol+1; i++) {
-        _layers.push_back(std::make_unique<DenseLayer>(t, &Act::relu, last_dim, hidden_dim, i,
-            std::make_unique<HeInitializer>())); // Pass initializer
-    }
+    last_dim = hidden_dim; // 임시
+    for (uint64_t i = 1; i< _nol+1; i++) _layers.push_back(
+        std::make_unique<DenseLayer>(ActFunc::RELU, 
+                                     last_dim, 
+                                     hidden_dim, 
+                                     he, 
+                                     _layers.size()));
 
     // index = _nol+1 | output layer | softmax
-    _layers.push_back(std::make_unique<DenseLayer>(t, &Act::softmax, last_dim, output_dim, _nol+1,
-        std::make_unique<HeInitializer>())); // Pass initializer
+    _layers.push_back(
+        std::make_unique<DenseLayer>(ActFunc::SOFTMAX, 
+                                     last_dim, 
+                                     output_dim, 
+                                     he, 
+                                     _layers.size()));
 }
 
 // for test
@@ -62,8 +73,8 @@ void Model::test() {
     // 전역으로 둬야 함. init에 맞게. 일단 테스트 코드
     const uint64_t input_dim = 768;
     const uint64_t output_dim = 10;
-    const uint64_t hidden_dim = 1024;
-    const uint64_t batch_size = 256;
+    const uint64_t hidden_dim = 4096;
+    const uint64_t batch_size = 128;
 
     // 일단 임시로 랜덤
     Matrix_T<fp16> current_input(batch_size, input_dim);

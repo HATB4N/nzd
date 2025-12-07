@@ -37,7 +37,7 @@ int Model::load_parms() {
         return -1;
     }
     // magic byte
-    std::vector<uint8_t> test_id{3};
+    std::vector<uint8_t> test_id(3);
     _fin.read(reinterpret_cast<char*>(test_id.data()), 3);
     if (!_fin || std::string(test_id.begin(), test_id.end()) != "NZD") {
         return -1;
@@ -81,15 +81,15 @@ int Model::load_parms() {
 int Model::save_unit_parms(uint64_t index, std::ofstream& _fout) {
     auto &target = _layers[index];
     auto &w_matrix = target->get_weight(); // including dimension information & actual datas(=parms)
-    auto& w_data = w_matrix.data(View::NT);
+    auto &w_data = w_matrix.data(View::NT);
     auto &b_matrix = target->get_bias(); // same as above
-    auto& b_data = b_matrix.data(View::NT);
+    auto &b_data = b_matrix.data(View::NT);
     
     // construct header
     std::vector<uint8_t> header;
     header.push_back(0x00); // for first byte, asuume that len_header <= 255byte (뒤에서 header[0] = header.size()-1로 길이 기록)
     write_uint64_t_big_endian(header, index);
-    header.push_back(static_cast<uint8_t>(target->act_func)); // enum def @ Activation.h
+    header.push_back(static_cast<uint8_t>(target->get_act_func())); // enum def @ Activation.h
     write_uint64_t_big_endian(header, w_matrix.row());
     write_uint64_t_big_endian(header, w_matrix.col());
     write_uint64_t_big_endian(header, b_matrix.row());

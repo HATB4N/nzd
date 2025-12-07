@@ -1,5 +1,5 @@
-#ifndef STRUCT_T
-#define STRUCT_T
+#ifndef NZD_STRUCT_H
+#define NZD_STRUCT_H
 
 #include "Common/Types.h"
 #include <cstddef>
@@ -97,7 +97,6 @@ private:
     }
 
     void _transpose_from_t() { // _m을 채우는 것
-        std::cout << "tft" << std::endl;
         if (_m.size() != size()) _m.resize(size());
         for(size_t r = 0; r< _row; ++r) {
             for(size_t c = 0; c< _col; ++c) {

@@ -12,7 +12,7 @@ WARNINGS := -Wall
 INCLUDES := -I$(INCLUDE_DIR)
 
 RELEASE_CXXFLAGS := -O3 -march=native -ffast-math -funroll-loops -DNDEBUG
-RELEASE_LDFLAGS := -flto
+RELEASE_LDFLAGS := -flto -fopenmp-simd
 DEBUG_CXXFLAGS := -O0 -g -fno-omit-frame-pointer
 DEBUG_LDFLAGS :=
 

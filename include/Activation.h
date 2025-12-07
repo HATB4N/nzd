@@ -7,8 +7,6 @@
 #include <cstddef>
 
 enum class ActFunc : uint8_t {
-    // 이거 받아서 DL에서 알아서 함수포인터 찾든 해서 초기화하게.
-    // 컨스트럭터 수정해야 함.
     LINEAR,
     SOFTMAX,
     SIGMOID,
@@ -18,7 +16,7 @@ enum class ActFunc : uint8_t {
 };
 
 namespace Act {
-    void inline linear(Matrix_T<fp32> &m1) { return; }
+    void inline linear(Matrix_T<fp32> &m1) { return; } // fix
     void softmax(Matrix_T<fp32> &m1);
     void sigmoid(Matrix_T<fp32> &m1);
     void silu(Matrix_T<fp32> &m1);
@@ -34,5 +32,10 @@ namespace ActDifr {
     void difr_relu(Matrix_T<fp32> &m1);
     void difr_l_relu(Matrix_T<fp32> &m1);
 };
+
+using ActFn = void(*)(Matrix_T<fp32>&);
+
+ActFn resolve_act(ActFunc);
+ActFn resolve_act_difr(ActFunc);
 
 #endif
