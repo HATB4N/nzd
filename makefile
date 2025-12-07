@@ -7,7 +7,7 @@ OBJ_DIR := obj
 
 BUILD ?= release
 
-CXXSTD := -std=c++23
+CXXSTD := -std=c++20
 WARNINGS := -Wall
 INCLUDES := -I$(INCLUDE_DIR)
 

@@ -1,15 +1,11 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
-#include "Struct.h"
+#include "Common/Struct.h"
 #include <cstddef>
-#include <stdfloat>
+#include "Common/Types.h"
 #include <vector>
 #include <span>
-
-// cpp23
-using fp16 = std::float16_t;
-using fp32 = std::float32_t;
 
 class Matrix { // 생성자, 소멸자로 thread pool을 static하게 두는 것도 좋을 듯?
 public:

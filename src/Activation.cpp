@@ -2,30 +2,36 @@
 #include <cassert>
 #include <algorithm>
 #include <cmath>
+#include <vector>
 
-void Act::softmax(Matrix_T<fp32> &m1_t) {
-    size_t _batch = m1_t.col();
-    for(size_t i = 0; i< m1_t.row(); ++i) {
-        auto start = m1_t.data(View::T).begin() + i * _batch;
-        auto end = start + _batch;
-        fp32 max = *std::max_element(start, end);
+void Act::softmax(Matrix_T<fp32> &m) {
+    size_t num_classes = m.col();
+    size_t batch_size = m.row();
+    auto& m_data = m.data(View::NT);
+
+    for(size_t i = 0; i < batch_size; ++i) {
+        auto row_start = m_data.begin() + i * num_classes;
+        auto row_end = row_start + num_classes;
+        
+        fp32 max = *std::max_element(row_start, row_end);
         fp32 sum = 0.0f;
 
-        for(auto cur_m = start; cur_m< end; cur_m++) {
-            *cur_m = std::exp(*cur_m - max);
-            sum += *cur_m;
+        for(auto it = row_start; it < row_end; it++) {
+            *it = std::exp(*it - max);
+            sum += *it;
         }
 
-        fp32 inv = 1.0f / sum;
-        for(auto cur_m = start; cur_m< end; cur_m++) {
-            *cur_m *= inv;
+        fp32 inv_sum = (sum == 0.0f) ? 0.0f : 1.0f / sum;
+        for(auto it = row_start; it < row_end; it++) {
+            *it *= inv_sum;
         }
     }
 }
 
 void Act::relu(Matrix_T<fp32> &m1) {
-    for(size_t i = 0; i< m1.size(); ++i) {
-        m1.data(View::T)[i] = std::max(fp32(0.0f), m1.data(View::T)[i]);
+    auto& m_data = m1.data(View::NT);
+    for(size_t i = 0; i < m1.size(); ++i) {
+        m_data[i] = std::max(fp32(0.0f), m_data[i]);
     }
 }
 

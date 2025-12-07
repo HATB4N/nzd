@@ -1,14 +1,12 @@
 #ifndef STRUCT_T
 #define STRUCT_T
 
-#include <stdfloat>
+#include "Common/Types.h"
 #include <cstddef>
 #include <vector>
 #include <cstring>
 #include <iostream>
-
-using fp16 = std::float16_t;
-using fp32 = std::float32_t;
+#include <memory_resource>
 
 enum class Ori { NT, T };
 enum class View { NT, T };
@@ -16,12 +14,12 @@ enum class View { NT, T };
 template <typename T>
 class Matrix_T {
 public:
-    Matrix_T(size_t row, size_t col, Ori init = Ori::NT)
-    : _row(row), _col(col), _primary(init) {} // I just learn this cool init method
+    Matrix_T(size_t row, size_t col, Ori init = Ori::NT, std::pmr::memory_resource* resource = std::pmr::get_default_resource())
+    : _row(row), _col(col), _primary(init), _m(resource), _m_t(resource) {} // I just learn this cool init method
 
     // load parms에서 사용하는 생성자임.
-    Matrix_T(size_t row, size_t col, const std::vector<T>& data_vec, Ori init = Ori::NT)
-    : _m(data_vec), get_NT(true), _row(row), _col(col), _primary(init) {
+    Matrix_T(size_t row, size_t col, const std::vector<T>& data_vec, Ori init = Ori::NT, std::pmr::memory_resource* resource = std::pmr::get_default_resource())
+    : _m(data_vec.begin(), data_vec.end(), resource), get_NT(true), _row(row), _col(col), _primary(init), _m_t(resource) {
         if (data_vec.size() != row * col) {
             throw std::invalid_argument("data_vec size does not match row * col");
         }
@@ -31,7 +29,7 @@ public:
     size_t row() const { return _row; }
     size_t col() const { return _col; }
     
-    std::vector<T>& data(View view = View::NT) {
+    std::pmr::vector<T>& data(View view = View::NT) {
         if(view == View::NT) {
             if(_m.empty()) {
                 if(get_T && !get_NT && !expired_T) {
@@ -57,7 +55,7 @@ public:
         return _m_t;
     }
 
-    const std::vector<T>& data(View view = View::NT) const {
+    const std::pmr::vector<T>& data(View view = View::NT) const {
         if (view == View::NT) {
             if (_m.empty()) {
                 if (get_T && !expired_T) {
@@ -80,8 +78,8 @@ public:
     }
 
 private:
-    std::vector<T> _m;
-    std::vector<T> _m_t;
+    std::pmr::vector<T> _m;
+    std::pmr::vector<T> _m_t;
     bool get_T = false, get_NT = false;
     bool expired_T = false, expired_NT = false;
     size_t _row, _col; // based on _m (not _m_t)

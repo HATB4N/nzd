@@ -2,6 +2,7 @@
 #include <cmath>
 #include <algorithm>
 #include <future>
+#include "ThreadPool.h"
 
 Matrix::Matrix(unsigned int threads) {
     unsigned int MAX_T = std::thread::hardware_concurrency();
@@ -35,11 +36,13 @@ void Matrix::multiply(const Matrix_T<fp16> &x, const Matrix_T<fp16> &w, Matrix_T
     size_t in_dim = x.col();
     size_t out_dim = w.col();
 
-    std::vector<std::future<void>> futures;
-    futures.reserve(_threads);
+    // wait targets
+    std::vector<std::future<void>> results;
+    results.reserve(_threads); // split job
 
     const size_t cs = batch_size / _threads;
     size_t offset = 0;
+
     for (unsigned int i = 0; i < _threads; ++i) {
         const size_t current_batch_size = (i == _threads - 1) ? (batch_size - offset) : cs;
         if (current_batch_size == 0) continue;
@@ -47,19 +50,21 @@ void Matrix::multiply(const Matrix_T<fp16> &x, const Matrix_T<fp16> &w, Matrix_T
         auto _x_part = std::span<const fp16>(_x.data() + offset * in_dim, current_batch_size * in_dim);
         auto _r_part = std::span<fp32>(_r.data() + offset * out_dim, current_batch_size * out_dim);
         
-        futures.emplace_back(std::async(std::launch::async, [=, this](){
-            this->mul_part(_x_part, _wt, _r_part, current_batch_size, in_dim, out_dim);
-        }));
-
+        results.emplace_back(
+            ThreadPool::instance().enqueue([=, this]() {
+                this->mul_part(_x_part, _wt, _r_part, current_batch_size, in_dim, out_dim);
+            })
+        );
         offset += current_batch_size;
     }
 
-    for (auto& fut : futures) {
+    // synchonization
+    for (auto& fut : results) {
         fut.get();
     }
 }
 
-// R = X * W  <=> R = X * (W^T)^T
+// R = XW  <=> R = <X, (W^T)>
 void Matrix::mul_part(
     std::span<const fp16> x_part, std::span<const fp16> wt, 
     std::span<fp32> r_part, size_t x_rows, size_t in_dim, size_t out_dim) {

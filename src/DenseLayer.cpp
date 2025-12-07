@@ -1,5 +1,4 @@
 #include "DenseLayer.h"
-#include "Struct.h"
 #include <algorithm>
 
 DenseLayer::DenseLayer(

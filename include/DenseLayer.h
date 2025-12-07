@@ -3,14 +3,12 @@
 
 #include "Matrix.h"
 #include "Activation.h"
-#include "Struct.h"
+#include "Common/Struct.h"
+#include "Common/Types.h"
 #include "Initializers/IWeightInitializer.h"
 #include <memory>
 #include <vector>
 #include <cstdint>
-
-using fp16 = std::float16_t;
-using fp32 = std::float32_t;
 
 class DenseLayer {
 public:

@@ -1,7 +1,7 @@
 #ifndef IWEIGHTINITIALIZER_H
 #define IWEIGHTINITIALIZER_H
 
-#include "../Struct.h"
+#include "Common/Struct.h"
 class IWeightInitializer {
 public:
     virtual void initialize(Matrix_T<fp16>& weights, size_t input_dim, size_t output_dim) const = 0;
