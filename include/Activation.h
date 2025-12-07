@@ -6,7 +6,8 @@
 #include <vector>
 #include <cstddef>
 
-enum Func { // 이거 받아서 DL에서 알아서 함수포인터 찾든 해서 초기화하게.
+enum class ActFunc : uint8_t {
+    // 이거 받아서 DL에서 알아서 함수포인터 찾든 해서 초기화하게.
     // 컨스트럭터 수정해야 함.
     LINEAR,
     SOFTMAX,

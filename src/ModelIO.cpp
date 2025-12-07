@@ -89,7 +89,7 @@ int Model::save_unit_parms(uint64_t index, std::ofstream& _fout) {
     std::vector<uint8_t> header;
     header.push_back(0x00); // for first byte, asuume that len_header <= 255byte (뒤에서 header[0] = header.size()-1로 길이 기록)
     write_uint64_t_big_endian(header, index);
-    header.push_back(target->act_enum);
+    header.push_back(static_cast<uint8_t>(target->act_func)); // enum def @ Activation.h
     write_uint64_t_big_endian(header, w_matrix.row());
     write_uint64_t_big_endian(header, w_matrix.col());
     write_uint64_t_big_endian(header, b_matrix.row());
@@ -117,10 +117,8 @@ int Model::load_unit_parms(std::ifstream& _fin) {
 
     // header
     uint64_t index = read_uint64_t_big_endian(_fin);
-    
     uint8_t act_enum_val;
     _fin.read(reinterpret_cast<char*>(&act_enum_val), sizeof(act_enum_val));
-
     uint64_t w_rows = read_uint64_t_big_endian(_fin);
     uint64_t w_cols = read_uint64_t_big_endian(_fin);
     uint64_t b_rows = read_uint64_t_big_endian(_fin);
