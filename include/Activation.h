@@ -38,4 +38,4 @@ using ActFn = void(*)(Matrix_T<fp32>&);
 ActFn resolve_act(ActFunc);
 ActFn resolve_act_difr(ActFunc);
 
-#endif
+#endif // ACTIVATION_H

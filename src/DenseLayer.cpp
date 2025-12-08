@@ -12,26 +12,25 @@ DenseLayer::DenseLayer(ActFunc act_enum,
                                        _input_dim(input_dim), _output_dim(output_dim),
                                        _act(resolve_act(act_enum)), _act_difr(resolve_act_difr(act_enum)), 
                                        _gemm(std::make_unique<Matrix>()) {                          
-    if (_initializer) {
+    if (_initializer) { // allow nullptr
         _initializer->initialize(_weights, _input_dim, _output_dim);
-        // _initializer->initialize(_biases, 1, _output_dim);
         std::fill(_biases.data(View::NT).begin(), _biases.data(View::NT).end(), static_cast<fp16>(0.0f));
     }
 }
 
-// R = σ(XW+b)
+// R = σ(XW+b), multiply(Y, X, W, View::T)
 void DenseLayer::forward(const Matrix_T<fp16> &x, Matrix_T<fp32> &r) {
     _gemm->multiply<fp16, fp32>(r, x, _weights, View::T); // for r(0..n) r_i := <x, w_i>
-    // multiply(Y, X, W, View::T)
     _gemm->add<fp16, fp32>(r, _biases); // r := r + b
     _act(r); // r := σ(r)
 }
 
+// multiply(dX, dY, W, View::NT)
 Matrix_T<fp32> DenseLayer::backward(const Matrix_T<fp32> &grad_output) {
     // _gemm->multiply<fp32, fp32>(..., View::NT)
-    // multiply(dX, dY, W, View::NT)
 }
 
+// W := W - lr
 void DenseLayer::update() {
 
 }

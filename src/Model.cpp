@@ -31,9 +31,9 @@ void Model::init() {
     // 테스트
     // metadata는 배열에 저장해서 layer에 맞는 dim 읽어오게.
     // 지금은 그냥 임시 고정값.
-    const uint64_t input_dim = 768;
-    const uint64_t output_dim = 10;
-    const uint64_t hidden_dim = 2048;
+    const uint64_t input_dim = 2048;
+    const uint64_t output_dim = 128;
+    const uint64_t hidden_dim = 8192;
     auto he = std::make_shared<HeInitializer>(1234);
 
     uint64_t last_dim = input_dim;
@@ -54,6 +54,14 @@ void Model::init() {
                                      hidden_dim, 
                                      he, 
                                      _layers.size()));
+    // // example of other usage                                 
+    // _layers.push_back(
+    //     std::make_unique<DenseLayer>(ActFunc::RELU, 
+    //                                  last_dim, 
+    //                                  hidden_dim, 
+    //                                  nullptr, // without initialize
+    //                                  _layers.size()));
+    //     _layers[_layers.size()-1]->set_weight(_layers[_layers.size()-2]->get_weight()); // set data from another source
 
     // index = _nol+1 | output layer | softmax
     _layers.push_back(
@@ -71,10 +79,10 @@ void Model::test() {
     std::cout << "Model::test() forward propagation test started." << std::endl;
 
     // 전역으로 둬야 함. init에 맞게. 일단 테스트 코드
-    const uint64_t input_dim = 768;
-    const uint64_t output_dim = 10;
-    const uint64_t hidden_dim = 2048;
-    const uint64_t batch_size = 128;
+    const uint64_t input_dim = 2048;
+    const uint64_t output_dim = 128;
+    const uint64_t hidden_dim = 8192;
+    const uint64_t batch_size = 1024;
 
     // 일단 임시로 랜덤
     Matrix_T<fp16> current_input(batch_size, input_dim);

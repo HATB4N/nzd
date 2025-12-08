@@ -28,4 +28,4 @@ private:
 
 };
 
-#endif
+#endif // MODEL_H

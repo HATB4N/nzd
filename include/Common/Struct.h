@@ -108,4 +108,4 @@ private:
     }
 };
 
-#endif
+#endif // NZD_STRUCT_H

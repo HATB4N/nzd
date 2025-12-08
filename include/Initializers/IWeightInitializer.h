@@ -51,4 +51,4 @@ protected:
     virtual void fill_chunk(std::span<fp16> chunk, uint64_t input_dim, uint64_t output_dim, uint32_t chunk_seed) const = 0;
 };
 
-#endif
+#endif // IWEIGHTINITIALIZER_H

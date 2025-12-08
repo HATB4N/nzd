@@ -15,7 +15,7 @@ public:
     DenseLayer(ActFunc act_enum,
                uint64_t input_dim, 
                uint64_t output_dim, 
-               std::shared_ptr<IWeightInitializer> initializer,
+               std::shared_ptr<IWeightInitializer> initializer, // allow nullptr
                uint64_t idx); // 얘는 _layers에서의 index(physical id)임.
     ~DenseLayer() = default;
 
@@ -50,4 +50,4 @@ private:
     std::shared_ptr<IWeightInitializer> _initializer;
 };
 
-#endif
+#endif // DENSELAYER_H

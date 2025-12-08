@@ -6,7 +6,7 @@ void machine();
 int main() {
     machine();
     // test code
-    int i = 10;
+    int i = 1;
     while(i--) {
         Model model(10);
         model.init();

@@ -23,7 +23,7 @@ protected:
     }
 };
 
-#endif
+#endif // HEINITIALIZER_H
 
 /*
 

@@ -89,4 +89,4 @@ private:
     bool stop;
 };
 
-#endif
+#endif // THREADPOOL_H

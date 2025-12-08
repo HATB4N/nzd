@@ -6,4 +6,4 @@ class CorssEntrpoy : public ILoss {
 
 };
 
-#endif
+#endif // CROSSENTROPY_H

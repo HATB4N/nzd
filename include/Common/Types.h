@@ -7,4 +7,4 @@
 using fp16 = _Float16;
 using fp32 = float;
 
-#endif
+#endif // NZD_TYPES_H

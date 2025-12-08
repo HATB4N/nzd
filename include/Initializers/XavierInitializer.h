@@ -23,4 +23,4 @@ protected:
     }
 };
 
-#endif
+#endif // XAVIERINITIALIZER_H
