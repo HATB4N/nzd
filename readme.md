@@ -3,35 +3,40 @@
 ## 뭐하는거?
 STL만 써서 신경망 만들기(cpp20 req)
 
-## 기능
+
+## 사용
+### 기능
 - nothing
 
-## 빌드
+### 빌드
 ```sh
 make
 ```
 
-## 실행
+### 실행
 ```sh
 ./NZD
 ```
 
-## 당장 할거
+## 진행도
+0.342532% / 100%
+
+### 당장 할거
 - back propagation -> mnist 학습
 - mini batch
 - etc
 
-## 한거
+### 한거
 - 일단 곱셈 되긴 함
 - 세이브 로드 일단은 됨
 
-## 언젠간 할거
+### 언젠간 할거
 - matrix 클래스의 thread 수명은 unique_ptr로 관리. 생성 오버헤드 줄이기 => Threadpool 구성함
 - operations를 unit화 후 graph engine만들고 dependencies에 맞게 펼쳐서 쓰레드 분배하기
 - 레이어도 인터페이스화
 - init시점에서 env나 arg로 MAX_MEMORY 받게 해서 heap에 연속 memory pool만들고 Matrix_T는 저기서 메모리를 할당받음. static var(total memory usage)과 비교해서 우선순위에 맞춰 연속접근을 위해 캐시된 vector(_m_t or _m 중 최근에 접근하지 않은 것)에 대한 삭제 (LRU? idk) (std::pmr::monotonic_buffer_resource)
 
-### 언젠간 할거 메모
+#### 언젠간 할거 메모
 - control plane과 execution plane을 구분한다.
 - control plane에서는 추상화된 레이어만을 바라보며 유저의 설정에 따라 명령을 내린다.
     - 실제 각 레이어에서는 type에 맞는 sequential execution plan을 구성한다.
@@ -39,6 +44,9 @@ make
 - execution plane에서는 내려온 plan에 대한 실행을 담당한다. (나중에 aarch64, amd64구분해서 SIMD를 직접 쓰든 뭘 하든 여기서 동일 interface를 보장하는 여러 연산 모듈 중 필요한 걸 선택할수 있게)
 
 ## 참고
-- 파라미터 저장 방식
+- (언젠가 무조건 바뀔)파라미터 저장 방식
     - `[NZD(magicbyte)][metadata len][metadata(about how to read the data)]` 하나 넣고(레이어들에 대한 정보)
     - `[metadata len][metadata][data]`단위를 하위 함수에서 순차적으로 write함(하나의 레이어에 대한 정보).
+
+## 진짜 참고
+- 프로젝트 이름 지어준 사람: [@zenisa1](https://github.com/zenisa1)
