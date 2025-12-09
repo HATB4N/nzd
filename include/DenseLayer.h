@@ -20,7 +20,7 @@ public:
     ~DenseLayer() = default;
 
     void forward(const Matrix_T<fp16> &x, Matrix_T<fp32> &r);
-    Matrix_T<fp32> backward(const Matrix_T<fp32> &grad_output);
+    void backward(Matrix_T<fp32>& d_out, Matrix_T<fp32>& d_in);
     void update();
 
     Matrix_T<fp16>& get_weight();
@@ -38,6 +38,7 @@ private:
     Matrix_T<fp32> _grad_weights;
     Matrix_T<fp32> _grad_biases;
     // Matrix_T<fp16> _x_cache;
+    // Matrix_T<fp32> _z_cache;
     uint64_t _input_dim;
     uint64_t _output_dim;
     

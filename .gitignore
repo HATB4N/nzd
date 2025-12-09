@@ -7,3 +7,4 @@ todo.md
 # currently main.cpp works as test code. nothing to see.
 data/*
 dataset/*
+.DS_Store

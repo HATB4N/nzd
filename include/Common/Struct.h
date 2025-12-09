@@ -24,6 +24,21 @@ public:
             throw std::invalid_argument("data_vec size does not match row * col");
         }
     }
+    
+    template <typename U>
+    Matrix_T<U> cast(std::pmr::memory_resource* resource = std::pmr::get_default_resource()) {
+        const auto& src_data = this->data(View::NT);
+
+        std::vector<U> new_data;
+        new_data.resize(src_data.size());
+
+        #pragma omp simd
+        for (size_t i = 0; i < src_data.size(); ++i) {
+            new_data[i] = static_cast<U>(src_data[i]);
+        }
+
+        return Matrix_T<U>(_row, _col, new_data, Ori::NT, resource);
+    }
 
     uint64_t size() const { return _row * _col; }
     uint64_t row() const { return _row; }

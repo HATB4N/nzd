@@ -1,5 +1,7 @@
 #include "DenseLayer.h"
+#include "Activation.h"
 #include <algorithm>
+#include <iostream>
 
 DenseLayer::DenseLayer(ActFunc act_enum,
                        uint64_t input_dim, 
@@ -20,14 +22,16 @@ DenseLayer::DenseLayer(ActFunc act_enum,
 
 // R = σ(XW+b), multiply(Y, X, W, View::T)
 void DenseLayer::forward(const Matrix_T<fp16> &x, Matrix_T<fp32> &r) {
-    _gemm->multiply<fp16, fp32>(r, x, _weights, View::T); // for r(0..n) r_i := <x, w_i>
-    _gemm->add<fp16, fp32>(r, _biases); // r := r + b
-    _act(r); // r := σ(r)
+    // _x_cache = x;
+    _gemm->multiply<fp16, fp32>(r, x, _weights);
+    _gemm->add<fp16, fp32>(r, _biases);
+    // _z_cache = r;
+    _act(r);
 }
 
 // multiply(dX, dY, W, View::NT)
-Matrix_T<fp32> DenseLayer::backward(const Matrix_T<fp32> &grad_output) {
-    // _gemm->multiply<fp32, fp32>(..., View::NT)
+void DenseLayer::backward(Matrix_T<fp32>& d_out, Matrix_T<fp32>& d_in) {
+
 }
 
 // W := W - lr
@@ -43,12 +47,20 @@ Matrix_T<fp16>& DenseLayer::get_bias() {
     return this->_biases;
 }
 
+Matrix_T<fp32>& DenseLayer::get_grad_weight() {
+    return this->_grad_weights;
+}
+
+Matrix_T<fp32>& DenseLayer::get_grad_bias() {
+    return this->_grad_biases;
+}
+
 void DenseLayer::set_weight(const Matrix_T<fp16>& new_weights) {
-    _weights = new_weights;
+    this->_weights = new_weights;
 }
 
 void DenseLayer::set_bias(const Matrix_T<fp16>& new_biases) {
-    _biases = new_biases;
+    this->_biases = new_biases;
 }
 
 ActFunc DenseLayer::get_act_func() {

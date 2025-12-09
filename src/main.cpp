@@ -1,18 +1,17 @@
 #include <iostream>
-#include "Model.h"
+#include "Train.h"
 
 void machine();
 
 int main() {
     machine();
-    // test code
-    int i = 1;
-    while(i--) {
-        Model model(10);
-        model.init();
-        model.test();
-    }
-    
+    Train train(1000, // max epochs
+                256, // batch size
+                28*28, // input dim
+                10, // output dim
+                1024); // hidden dim
+    train.train_epoch();
+
     return 0;
 }
 

@@ -2,10 +2,13 @@
 #define ILOSS_H
 
 #include "Common/Struct.h"
+#include "Common/Types.h"
+
 class ILoss {
 public:
     virtual ~ILoss() = default;
-    virtual void getLoss(Matrix_T<fp16>& wiights, size_t input_dim, size_t output_dim) const = 0;  
+    virtual fp32 calculate(const Matrix_T<fp32>& y_pred, const Matrix_T<fp32>& y_true) = 0;
+    virtual void backward(const Matrix_T<fp32>& y_pred, const Matrix_T<fp32>& y_true, Matrix_T<fp32>& gradient) = 0;
 };
 
 #endif // ILOSS_H

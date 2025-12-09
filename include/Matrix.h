@@ -8,6 +8,7 @@
 #include <span>
 #include <future>
 #include "ThreadPool.h"
+#include <cassert>
 
 class Matrix {
 public:
@@ -18,8 +19,8 @@ public:
     // r is (batch, out_dim), b is (1, out_dim)
     template <typename T_IN, typename T_OUT>
     void add(Matrix_T<T_OUT> &r, const Matrix_T<T_IN> &b) {
-        auto r_data = r.data(View::NT);
-        auto b_data = b.data(View::NT);
+        auto& r_data = r.data(View::NT);
+        const auto& b_data = b.data(View::NT);
 
         for(size_t i = 0; i < r.row(); ++i) {
             for(size_t j = 0; j < r.col(); ++j) {
@@ -30,14 +31,14 @@ public:
 
     // x is (batch, in_dim), w is (in_dim, out_dim), r is (batch, out_dim)
     template <typename T_IN, typename T_OUT>
-    void multiply(Matrix_T<T_OUT> &r, const Matrix_T<T_IN> &x, const Matrix_T<T_IN> &w, View w_view_type = View::T) {
-        auto _x = std::span<const T_IN>(x.data(View::NT));
-        auto _wt = std::span<const T_IN>(w.data(w_view_type));; // for backpropa
-        auto _r = std::span<T_OUT>(r.data(View::NT));
+    void multiply(Matrix_T<T_OUT> &r, const Matrix_T<T_IN> &x, const Matrix_T<T_IN> &w, View x_view_type = View::NT,  View w_view_type = View::T) {
+        auto _x = std::span<const T_IN>(x.data(x_view_type));
+        auto _w = std::span<const T_IN>(w.data(w_view_type));
+        auto _r = std::span<T_OUT>(r.data(x_view_type)); // 불확실
 
-        size_t batch_size = x.row();
-        size_t in_dim = x.col();
-        size_t out_dim = w.col();
+        size_t batch_size = (x_view_type == View::T) ? x.col() : x.row();
+        size_t in_dim = (x_view_type == View::T) ? x.row() : x.col();
+        size_t out_dim = (w_view_type == View::NT) ? w.col() : w.row();
 
         std::vector<std::future<void>> results;
         results.reserve(_threads);
@@ -54,7 +55,7 @@ public:
             
             results.emplace_back(
                 ThreadPool::instance().enqueue([=, this]() {
-                    this->mul_part<T_IN, T_OUT>(_x_part, _wt, _r_part, current_batch_size, in_dim, out_dim);
+                    this->mul_part<T_IN, T_OUT>(_x_part, _w, _r_part, current_batch_size, in_dim, out_dim);
                 })
             );
             offset += current_batch_size;
@@ -64,17 +65,58 @@ public:
             fut.get();
         }
     }
+
+    template <typename T1, typename T2>
+    void element_wise_multiply(Matrix_T<T1>& target, Matrix_T<T2>& other) {
+        assert(target.size() == other.size());
+
+        auto& target_data = target.data(View::NT);
+        auto& other_data = other.data(View::NT);
+
+        std::span<T1> target_span(target_data);
+        std::span<const T2> other_span(other_data);
+
+        uint64_t total_size = target.size();
+
+        std::vector<std::future<void>> results;
+        results.reserve(_threads);
+
+        uint64_t chunk_size = total_size / _threads;
+        uint64_t offset = 0;
+
+        for (unsigned int i = 0; i < _threads; ++i) {
+            const uint64_t current_size = (i == _threads - 1) ? (total_size - offset) : chunk_size;
+            if (current_size == 0) continue;
+
+            auto target_sub_span = target_span.subspan(offset, current_size);
+            auto other_sub_span = other_span.subspan(offset, current_size);
+            
+            results.emplace_back(
+                ThreadPool::instance().enqueue([=, this]() {
+                    this->elem_mul_part(target_sub_span, other_sub_span);
+                })
+            );
+            offset += current_size;
+        }
+
+        for (auto& fut : results) {
+            fut.get();
+        }
+    }
+
 private:
     // R = XW  <=> R = X(W^T)^T
     template <typename T_IN, typename T_OUT>
-    void mul_part(
-        std::span<const T_IN> x_part, std::span<const T_IN> wt, 
-        std::span<T_OUT> r_part, size_t x_rows, size_t in_dim, size_t out_dim) {
-
+    void mul_part(std::span<const T_IN> x_part, 
+                  std::span<const T_IN> w_transposed, 
+                  std::span<T_OUT> r_part, 
+                  size_t x_rows, 
+                  size_t in_dim, 
+                  size_t out_dim) {
         for (size_t i = 0; i < x_rows; ++i) {
             const T_IN* x_row = &x_part[i * in_dim];
             for (size_t j = 0; j < out_dim; ++j) {
-                const T_IN* wt_row = &wt[j * in_dim];
+                const T_IN* wt_row = &w_transposed[j * in_dim];
                 
                 T_OUT val = static_cast<T_OUT>(0); 
 
@@ -86,6 +128,15 @@ private:
             }
         }
     }
+
+    template <typename T1, typename T2>
+    void elem_mul_part(std::span<T1> target_chunk, std::span<const T2> other_chunk) {
+        assert(target_chunk.size() == other_chunk.size());
+        for (size_t i = 0; i < target_chunk.size(); ++i) {
+            target_chunk[i] *= static_cast<T1>(other_chunk[i]);
+        }
+    }
+
     unsigned int _threads;
 
 };
