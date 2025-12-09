@@ -11,7 +11,7 @@ public:
           uint64_t input_dim, 
           uint64_t output_dim,
           uint64_t hidden_dim);
-    void train_epoch();
+    void train_one_epoch();
 private:
     std::unique_ptr<Model> _model;
     uint64_t _total_data;

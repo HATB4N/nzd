@@ -10,7 +10,7 @@ int main() {
                 28*28, // input dim
                 10, // output dim
                 1024); // hidden dim
-    train.train_epoch();
+    train.train_one_epoch();
 
     return 0;
 }

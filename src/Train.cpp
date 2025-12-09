@@ -38,11 +38,11 @@ Train::Train(uint64_t epochs,
     _model->init(10, _input_dim, _output_dim, _hidden_dim, _batches_per_epoch);
 }
 
-void Train::train_epoch() {
-    this->_epochs = std::min(_epochs, _total_data / _batches_per_epoch); // edge case는 나중에 함수화할 때 고려
+void Train::train_one_epoch() {
+    uint64_t iter = (_total_data / _batches_per_epoch);
 
-    for (uint64_t epoch = 0; epoch< _epochs; epoch++) {
-        std::cout << "[Epoch " << epoch+1 << " / " << _epochs << "] started.\n";
+    for (uint64_t i = 0; i< iter; i++) {
+        std::cout << "[Batch " << i+1 << " / " << iter << "] started.\n";
 
         // minibatch 데이터 읽어오기(mnist IO 구현 안해서 일단 랜덤. 파일 구조 보고 긁어올 수 있게)
         // 함수화해서 target batch를 load시키자.
