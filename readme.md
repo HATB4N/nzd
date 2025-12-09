@@ -20,7 +20,7 @@ make
 - back propagation -> mnist 학습
 - mini batch
 - etc
-- init시점에서 env나 arg로 MAX_MEMORY 받게 해서 heap에 연속 memory pool만들고 Matrix_T는 저기서 메모리를 할당받음. static var(total memory usage)과 비교해서 우선순위에 맞춰 연속접근을 위해 캐시된 vector(_m_t or _m) 중 최근에 접근하지 않은 것)에 대한 삭제
+- init시점에서 env나 arg로 MAX_MEMORY 받게 해서 heap에 연속 memory pool만들고 Matrix_T는 저기서 메모리를 할당받음. static var(total memory usage)과 비교해서 우선순위에 맞춰 연속접근을 위해 캐시된 vector(_m_t or _m 중 최근에 접근하지 않은 것)에 대한 삭제 (LRU? idk)
 
 ## 한거
 - 일단 곱셈 되긴 함
