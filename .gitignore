@@ -1,10 +1,13 @@
-donotreadme.md
+# compile
 obj
 NZD
-todo.md
-.vscode
-# src/main.cpp
-# currently main.cpp works as test code. nothing to see.
+
+# data
 data/*
+!data/.gitkeep
 dataset/*
+!dataset/.gitkeep
+
+# ide & etc
+.vscode
 .DS_Store

@@ -5,8 +5,8 @@ void machine();
 
 int main() {
     machine();
-    Train train(1000, // max epochs
-                256, // batch size
+    Train train(1000,
+                512, // batch size
                 28*28, // input dim
                 10, // output dim
                 1024); // hidden dim
