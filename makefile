@@ -1,3 +1,4 @@
+# CXX := /opt/homebrew/opt/llvm/bin/clang++
 CXX := g++
 TARGET := NZD
 
@@ -11,8 +12,8 @@ CXXSTD := -std=c++20
 WARNINGS := -Wall
 INCLUDES := -I$(INCLUDE_DIR)
 
-RELEASE_CXXFLAGS := -O3 -march=native -ffast-math -funroll-loops -DNDEBUG
-RELEASE_LDFLAGS := -flto -fopenmp-simd
+RELEASE_CXXFLAGS := -O3 -march=native -ffast-math -funroll-loops -DNDEBUG -fopenmp
+RELEASE_LDFLAGS := -flto -fopenmpm -pthread
 DEBUG_CXXFLAGS := -O0 -g -fno-omit-frame-pointer
 DEBUG_LDFLAGS :=
 

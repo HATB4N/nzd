@@ -77,7 +77,7 @@ void Train::train_one_epoch() {
 }
 
 Matrix_T<fp32> Train::_get_label_batch_onehot() {
-    assert(this->_batch_size< 0);
+    assert(this->_batch_size> 0);
     Matrix_T<fp32> y(_batch_size, _output_dim);
     std::fill(y.data(View::NT).begin(), y.data(View::NT).end(), static_cast<fp32>(0.0f));
     fp32* ptr = y.data(View::NT).data();
@@ -85,7 +85,7 @@ Matrix_T<fp32> Train::_get_label_batch_onehot() {
 
     #pragma omp parallel for
     for (uint64_t i = 0; i < _batch_size; ++i) {
-        if (_current_idx + i >= _total_data) break;
+        // if (_current_idx + i >= _total_data) break; // for omp disabled
 
         uint8_t label = _mnist->all_labels[_current_idx + i];
         
@@ -96,7 +96,7 @@ Matrix_T<fp32> Train::_get_label_batch_onehot() {
 }
 
 Matrix_T<fp16> Train::_load_dataset() {
-    this->_batch_size = _batches_per_epoch; // fix
+    this->_batch_size = _batches_per_epoch; // fix 먼저 몇개 남았나 가져와야함
     Matrix_T<fp16> x(_batch_size, _input_dim);
     _batch_size = _mnist->get_batch<uint64_t>(_batches_per_epoch, x);
     return x;

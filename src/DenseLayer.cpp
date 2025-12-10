@@ -8,11 +8,11 @@ DenseLayer::DenseLayer(ActFunc act_enum,
                        uint64_t output_dim, 
                        std::shared_ptr<IWeightInitializer> initializer,
                        uint64_t idx) : _idx(idx),
+                                       _input_dim(input_dim), _output_dim(output_dim),
                                        _weights(input_dim, output_dim), _biases(1, output_dim), 
                                        _grad_weights(input_dim, output_dim), _grad_biases(1, output_dim), 
+                                       _act(resolve_act(act_enum)), _act_difr(resolve_act_difr(act_enum)),
                                        _initializer(std::move(initializer)),
-                                       _input_dim(input_dim), _output_dim(output_dim),
-                                       _act(resolve_act(act_enum)), _act_difr(resolve_act_difr(act_enum)), 
                                        _gemm(std::make_unique<Matrix>()) {                          
     if (_initializer) { // allow nullptr
         _initializer->initialize(_weights, _input_dim, _output_dim);

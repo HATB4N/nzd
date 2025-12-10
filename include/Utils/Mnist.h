@@ -83,7 +83,7 @@ public:
             // f: N[0, 255] -> R[0.0, 1.0] @ fp16
             dst_ptr[i] = static_cast<fp16>(temp_buf[i] / 255.0f);
         }
-        return static_cast<T>(actual_elements); 
+        return static_cast<T>(actual_elements/(this->_rows * this->_cols)); 
     }
 
     

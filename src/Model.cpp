@@ -47,7 +47,7 @@ int Model::init(uint64_t num_of_layers, // denselayer 기준
                                      he, 
                                      _layers.size()));
     
-    return 0;
+    return 0; // add error accumulation (ret+=...)
 }
 
 Matrix_T<fp32> Model::forward_batch(const Matrix_T<fp16>& x) {
@@ -82,6 +82,24 @@ Matrix_T<fp32> Model::forward_batch(const Matrix_T<fp16>& x) {
     return layer_output;
 }
 
+// WIP
 Matrix_T<fp32> Model::backward_batch(const Matrix_T<fp32>& y) { // loss를 받음
-    Matrix_T<fp32> current_input = y;
+    Matrix_T<fp32> current_input = y; // 얘를 시작으로 상위 레이어 순회돌면서 역전파시키기
+    Matrix_T<fp32> layer_output(_batch_size, _output_dim);
+    for (uint64_t i = _layers.size()-1; i>= 0; i--) {
+        auto& layer = _layers[i];
+
+        uint64_t current_output_dim =
+            (i == 0) ? _output_dim : _hidden_dim;
+
+        if (layer_output.row() != _batch_size ||
+            layer_output.col() != current_output_dim) {
+            layer_output = Matrix_T<fp32>(_batch_size, current_output_dim);
+        }
+        
+
+        layer->backward(current_input, layer_output);
+
+        // ...
+    }
 }

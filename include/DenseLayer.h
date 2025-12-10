@@ -33,22 +33,26 @@ public:
     
 
 private:
-    Matrix_T<fp16> _weights;
-    Matrix_T<fp16> _biases;
-    Matrix_T<fp32> _grad_weights;
-    Matrix_T<fp32> _grad_biases;
-    // Matrix_T<fp16> _x_cache;
-    // Matrix_T<fp32> _z_cache;
+    const uint64_t _idx;
     uint64_t _input_dim;
     uint64_t _output_dim;
-    
-    ActFunc act_func;
 
-    std::unique_ptr<Matrix> _gemm;
+    Matrix_T<fp16> _weights;
+    Matrix_T<fp16> _biases;
+
+    Matrix_T<fp32> _grad_weights;
+    Matrix_T<fp32> _grad_biases;
+
+    ActFunc act_func;
     void (*_act)(Matrix_T<fp32> &);
     void (*_act_difr)(Matrix_T<fp32> &);
-    const uint64_t _idx;
     std::shared_ptr<IWeightInitializer> _initializer;
+    std::unique_ptr<Matrix> _gemm;
+    
+
+    // Matrix_T<fp16> _x_cache;
+    // Matrix_T<fp32> _z_cache;
+    
 };
 
 #endif // DENSELAYER_H
