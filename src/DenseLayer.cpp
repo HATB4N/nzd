@@ -7,7 +7,7 @@ DenseLayer::DenseLayer(ActFunc act_enum,
                        uint64_t input_dim, 
                        uint64_t output_dim, 
                        std::shared_ptr<IWeightInitializer> initializer,
-                       uint64_t idx) : _idx(idx), // unique identifier of each layers. 나중에 구조체에 id - layer묶어서 관리하는게 편할듯. 일단 임시 ㅇㅇ
+                       uint64_t idx) : _idx(idx),
                                        _weights(input_dim, output_dim), _biases(1, output_dim), 
                                        _grad_weights(input_dim, output_dim), _grad_biases(1, output_dim), 
                                        _initializer(std::move(initializer)),

@@ -17,15 +17,15 @@ static uint32_t read_uint32_t_big_endian(std::ifstream& fin) {
     return value;
 }
 
-static uint32_t read_uint32_t_little_endian(std::ifstream& fin) {
-    uint32_t value = 0;
-    for (uint32_t i = 0; i < sizeof(uint32_t); i++) {
-        uint8_t byte;
-        fin.read(reinterpret_cast<char*>(&byte), sizeof(byte));
-        value |= (static_cast<uint32_t>(byte) << (i * 8));
-    }
-    return value;
-}
+// static uint32_t read_uint32_t_little_endian(std::ifstream& fin) {
+//     uint32_t value = 0;
+//     for (uint32_t i = 0; i < sizeof(uint32_t); i++) {
+//         uint8_t byte;
+//         fin.read(reinterpret_cast<char*>(&byte), sizeof(byte));
+//         value |= (static_cast<uint32_t>(byte) << (i * 8));
+//     }
+//     return value;
+// }
 
 class Mnist {
 public:
@@ -34,6 +34,7 @@ public:
         this->_fin_img.close();
         this->_fin_label.close();
     }
+    std::vector<uint8_t> all_labels;
     int init(std::string f, std::string l) {
         this->_path_img = f;
         this->_path_label = l;
@@ -59,8 +60,13 @@ public:
         
         uint32_t label_magicbyte = read_uint32_t_big_endian(_fin_label);
         if (!(label_magicbyte == 0x00000801)) return -1;
+
         std::cout << "[MNIST]: read valid label magicbyte" << std::endl;
         if (!(this->_total_imgs == read_uint32_t_big_endian(_fin_label))) return -1;
+        this->all_labels.resize(_total_imgs);
+        this->_fin_label.read(reinterpret_cast<char*>(all_labels.data()), sizeof(uint8_t)*_total_imgs);
+        std::cout << "[MNIST]: init done" << std::endl;
+        return 0;
     }
 
     template <typename T>
@@ -80,10 +86,7 @@ public:
         return static_cast<T>(actual_elements); 
     }
 
-    void get_labels(std::vector<uint8_t>& labels) {
-        uint64_t num_elements = labels.size();
-        _fin_label.read(reinterpret_cast<char*>(labels.data()), num_elements * sizeof(uint8_t));
-    }
+    
         
     uint32_t get_total() { return _total_imgs; }
     uint32_t get_rows() { return _rows; }

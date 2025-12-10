@@ -29,6 +29,22 @@ public:
         }
     }
 
+    // r:= r - b // 일단 위는 가중치 sum용인데 얜 one hot용이니까 다르게 구현함.
+    // r + 공통편향이었다면, 얜 그냥 component wise하게
+    template <typename T_IN, typename T_OUT>
+    void sub(Matrix_T<T_OUT> &r, const Matrix_T<T_IN> &b) {
+        uint64_t sz = r.row()*r.col();
+        assert(sz== b.row()*b.col());
+
+        auto& r_data = r.data(View::NT);
+        const auto& b_data = b.data(View::NT);
+        
+        #pragma omp parallel for simd schedule(static)
+        for(uint64_t i = 0; i< sz; i++) {
+            r_data[i] -= static_cast<T_OUT>(b_data[i]);
+        }
+    }
+
     // x is (batch, in_dim), w is (in_dim, out_dim), r is (batch, out_dim)
     template <typename T_IN, typename T_OUT>
     void multiply(Matrix_T<T_OUT> &r, const Matrix_T<T_IN> &x, const Matrix_T<T_IN> &w, View x_view_type = View::NT,  View w_view_type = View::T) {

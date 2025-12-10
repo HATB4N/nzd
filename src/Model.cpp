@@ -7,7 +7,7 @@
 
 Model::Model() {}
 
-void Model::init(uint64_t num_of_layers,
+int Model::init(uint64_t num_of_layers, // denselayer 기준
                  uint64_t input_dim,
                  uint64_t output_dim,
                  uint64_t hidden_dim,
@@ -18,10 +18,9 @@ void Model::init(uint64_t num_of_layers,
     _hidden_dim =hidden_dim;
     _batch_size =batch_size;
     unsigned int t = 14;
-    auto he = std::make_shared<HeInitializer>(1);
+    auto he = std::make_shared<HeInitializer>(1); // seed injectin req
 
     uint64_t last_dim = _input_dim;
-
     // index = 0 | input layer | linear
     _layers.push_back(
         std::make_unique<DenseLayer>(ActFunc::LINEAR, 
@@ -47,6 +46,8 @@ void Model::init(uint64_t num_of_layers,
                                      _output_dim, 
                                      he, 
                                      _layers.size()));
+    
+    return 0;
 }
 
 Matrix_T<fp32> Model::forward_batch(const Matrix_T<fp16>& x) {
@@ -81,6 +82,6 @@ Matrix_T<fp32> Model::forward_batch(const Matrix_T<fp16>& x) {
     return layer_output;
 }
 
-Matrix_T<fp32> Model::backward_batch(const Matrix_T<fp32>& dx) { // p-y
-
+Matrix_T<fp32> Model::backward_batch(const Matrix_T<fp32>& y) { // loss를 받음
+    Matrix_T<fp32> current_input = y;
 }
