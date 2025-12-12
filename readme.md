@@ -19,16 +19,30 @@ make
 ```
 
 ## 진행도
-0.342532% / 100%
+0.352532% / 100%
 
 ### 당장 할거
-- back propagation -> mnist 학습
-- mini batch
-- etc
+- 과적합 관련
+- 수치 안정성
 
 ### 한거
 - 일단 곱셈 되긴 함
 - 세이브 로드 일단은 됨
+- back propagation -> mnist 학습
+- mini batch
+```
+[Epoches 1 / 50] started.
+Batch Loss: 3.25548
+[Epoches 2 / 50] started.
+Batch Loss: 0.220378
+
+...
+
+----- Test Results -----
+Average Loss: 0.115109
+Accuracy: 98.09 %
+------------------------
+```
 
 ### 언젠간 할거
 - matrix 클래스의 thread 수명은 unique_ptr로 관리. 생성 오버헤드 줄이기 => Threadpool 구성함
