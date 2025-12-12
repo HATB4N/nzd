@@ -78,7 +78,7 @@ void Train::train_one_epoch() {
 
 Matrix_T<fp32> Train::_get_label_batch_onehot() {
     assert(this->_batch_size> 0);
-    Matrix_T<fp32> y(_batch_size, _output_dim);
+    Matrix_T<fp32> y(_batch_size, _output_dim); // row * col
     std::fill(y.data(View::NT).begin(), y.data(View::NT).end(), static_cast<fp32>(0.0f));
     fp32* ptr = y.data(View::NT).data();
     uint64_t cols = _output_dim;

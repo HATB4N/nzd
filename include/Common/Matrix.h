@@ -64,17 +64,15 @@ public:
     template <typename T_IN, typename T_OUT>
     void multiply(Matrix_T<T_OUT> &r, 
                   const Matrix_T<T_IN> &x, 
-                  const Matrix_T<T_IN> &w, 
-                  View x_view_type = View::NT,  
-                  View w_view_type = View::T) {
+                  const Matrix_T<T_IN> &w) {
         assert(x.col() == w.row());
-        auto _x = std::span<const T_IN>(x.data(x_view_type));
-        auto _w = std::span<const T_IN>(w.data(w_view_type));
-        auto _r = std::span<T_OUT>(r.data(x_view_type)); // 불확실
+        auto _x = std::span<const fp16>(x.data(View::NT));
+        auto _wt = std::span<const fp16>(w.data(View::T));
+        auto _r = std::span<T_OUT>(r.data(View::NT));
 
-        size_t batch_size = (x_view_type == View::T) ? x.col() : x.row();
-        size_t in_dim = (x_view_type == View::T) ? x.row() : x.col();
-        size_t out_dim = (w_view_type == View::NT) ? w.col() : w.row();
+        size_t batch_size =  x.row();
+        size_t in_dim = x.col();
+        size_t out_dim = w.col();
 
         std::vector<std::future<void>> results;
         results.reserve(_threads);
@@ -91,7 +89,7 @@ public:
             
             results.emplace_back(
                 ThreadPool::instance().enqueue([=, this]() {
-                    this->mul_part<T_IN, T_OUT>(_x_part, _w, _r_part, current_batch_size, in_dim, out_dim);
+                    this->mul_part<T_IN, T_OUT>(_x_part, _wt, _r_part, current_batch_size, in_dim, out_dim);
                 })
             );
             offset += current_batch_size;
