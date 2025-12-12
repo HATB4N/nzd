@@ -2,6 +2,7 @@
 #include "Activation.h"
 #include <algorithm>
 #include <iostream>
+#include "Common/Gemm.h"
 
 DenseLayer::DenseLayer(ActFunc act_enum,
                        uint64_t input_dim, 
@@ -10,28 +11,33 @@ DenseLayer::DenseLayer(ActFunc act_enum,
                        uint64_t idx) : _idx(idx),
                                        _input_dim(input_dim), _output_dim(output_dim),
                                        _weights(input_dim, output_dim), _biases(1, output_dim), 
-                                       _grad_weights(input_dim, output_dim), _grad_biases(1, output_dim), 
+                                       _grad_weights(input_dim, output_dim), _grad_biases(1, output_dim),
+                                       _x_cache(input_dim, output_dim), _z_cache(input_dim, output_dim), 
                                        _act(resolve_act(act_enum)), _act_difr(resolve_act_difr(act_enum)),
-                                       _initializer(std::move(initializer)),
-                                       _gemm(std::make_unique<Matrix>()) {                          
+                                       _initializer(std::move(initializer)) {                          
     if (_initializer) { // allow nullptr
         _initializer->initialize(_weights, _input_dim, _output_dim);
         std::fill(_biases.data(View::NT).begin(), _biases.data(View::NT).end(), static_cast<fp16>(0.0f));
     }
 }
 
+
 // R = σ(XW+b), multiply(Y, X, W, View::T)
 void DenseLayer::forward(const Matrix_T<fp16> &x, Matrix_T<fp32> &r) {
-    // _x_cache = x;
-    _gemm->multiply<fp16, fp32>(r, x, _weights);
-    _gemm->add<fp16, fp32>(r, _biases);
-    // _z_cache = r;
+    _x_cache = x;
+    gemm().multiply<fp16, fp32>(r, x, _weights);
+    // _gemm->multiply<fp16, fp32>(r, x, _weights);
+    gemm().add<fp16, fp32>(r, _biases);
+    _z_cache = r;
     _act(r);
 }
 
 // multiply(dX, dY, W, View::NT)
-void DenseLayer::backward(Matrix_T<fp32>& d_out, Matrix_T<fp32>& d_in) {
-
+void DenseLayer::backward(Matrix_T<fp32>& d_in, Matrix_T<fp32>& d_out) {
+    // // d_in = prev grad & d_out = next grad(result)
+    // _act_difr(this->_z_cache);
+    // gemm().element_wise_multiply<fp32, fp32>(d_in, _z_cache);
+    // d_out = d_in;
 }
 
 // W := W - lr

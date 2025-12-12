@@ -1,5 +1,13 @@
-# CXX := /opt/homebrew/opt/llvm/bin/clang++
-CXX := g++
+UNAME_S := $(shell uname -s)
+
+ifeq ($(UNAME_S), Darwin)
+	# macOS req: homebrew llvm
+	CXX := /opt/homebrew/opt/llvm/bin/clang++
+else
+	# otherwise (idk)
+	CXX := g++
+endif
+
 TARGET := NZD
 
 INCLUDE_DIR := include
@@ -13,7 +21,7 @@ WARNINGS := -Wall
 INCLUDES := -I$(INCLUDE_DIR)
 
 RELEASE_CXXFLAGS := -O3 -march=native -ffast-math -funroll-loops -DNDEBUG -fopenmp
-RELEASE_LDFLAGS := -flto -fopenmpm -pthread
+RELEASE_LDFLAGS := -flto -fopenmp -pthread
 DEBUG_CXXFLAGS := -O0 -g -fno-omit-frame-pointer
 DEBUG_LDFLAGS :=
 

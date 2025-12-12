@@ -3,6 +3,7 @@
 #include <iostream>
 #include <limits>
 #include <algorithm>
+#include "Common/Gemm.h"
 
 // 나중에 분리
 enum class Job : uint8_t {
@@ -25,7 +26,6 @@ Train::Train(uint64_t epochs,
              uint64_t hidden_dim) : _epochs(epochs),
                                     _batches_per_epoch(bpe), 
                                     _model(std::make_unique<Model>()),
-                                    _gemm(std::make_unique<Matrix>()), // 얘 그냥 프로그램 공용으로 두는게 나으려나...
                                     _output_dim(output_dim),
                                     _hidden_dim(hidden_dim) {}
 
@@ -67,7 +67,7 @@ void Train::train_one_epoch() {
         flag = Job::BACKWARD;
         _output_layer_proc = target_job(flag); 
 
-        _gemm->sub<fp32, fp32>(logits, y);
+        gemm().sub<fp32, fp32>(logits, y);
         // Matrix_T<fp32>dx = _model->backward_batch(logits);
         // -----BADKWARD 1 PASS END----- //
         

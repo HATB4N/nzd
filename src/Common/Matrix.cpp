@@ -1,4 +1,5 @@
-#include "Matrix.h"
+#include "Common/Matrix.h"
+#include "Common/Struct.h"
 #include <cmath>
 #include <algorithm>
 #include <thread>

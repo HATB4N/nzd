@@ -5,6 +5,7 @@
 #include "Common/Types.h"
 #include "ThreadPool.h"
 #include <thread>
+#include <span>
 
 class IWeightInitializer {
 public:

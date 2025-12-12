@@ -14,7 +14,7 @@
 
 class ThreadPool {
 public:
-    // singleto insatance
+    // singleton insatance
     static ThreadPool& instance() {
         static ThreadPool pool(std::thread::hardware_concurrency());
         return pool;

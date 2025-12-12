@@ -2,7 +2,6 @@
 #define TRAIN_H
 
 #include "Model.h"
-#include "Matrix.h"
 #include "Utils/Mnist.h"
 
 class Train {
@@ -23,7 +22,6 @@ private:
     const uint64_t _output_dim;
     const uint64_t _hidden_dim;
     std::unique_ptr<Mnist> _mnist;
-    std::unique_ptr<Matrix> _gemm;
     Matrix_T<fp16> _load_dataset();
     Matrix_T<fp32> _get_label_batch_onehot();
     uint64_t _current_idx = 0;

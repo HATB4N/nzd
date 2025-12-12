@@ -1,7 +1,6 @@
 #ifndef DENSELAYER_H
 #define DENSELAYER_H
 
-#include "Matrix.h"
 #include "Activation.h"
 #include "Common/Struct.h"
 #include "Common/Types.h"
@@ -20,7 +19,7 @@ public:
     ~DenseLayer() = default;
 
     void forward(const Matrix_T<fp16> &x, Matrix_T<fp32> &r);
-    void backward(Matrix_T<fp32>& d_out, Matrix_T<fp32>& d_in);
+    void backward(Matrix_T<fp32>& d_in, Matrix_T<fp32>& d_out);
     void update();
 
     Matrix_T<fp16>& get_weight();
@@ -43,15 +42,13 @@ private:
     Matrix_T<fp32> _grad_weights;
     Matrix_T<fp32> _grad_biases;
 
+    Matrix_T<fp16> _x_cache;
+    Matrix_T<fp32> _z_cache;
+
     ActFunc act_func;
     void (*_act)(Matrix_T<fp32> &);
     void (*_act_difr)(Matrix_T<fp32> &);
     std::shared_ptr<IWeightInitializer> _initializer;
-    std::unique_ptr<Matrix> _gemm;
-    
-
-    // Matrix_T<fp16> _x_cache;
-    // Matrix_T<fp32> _z_cache;
     
 };
 

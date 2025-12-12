@@ -29,7 +29,7 @@ int Model::init(uint64_t num_of_layers, // denselayer 기준
                                      he, 
                                      _layers.size()));
 
-    // index = (0, _nol) | hinnen layer | act
+    // index = (1, _nol) | hidden layer | act
     for (uint64_t i = 0; i< _nol; i++) {
         last_dim = _hidden_dim;
         _layers.push_back(
@@ -51,10 +51,10 @@ int Model::init(uint64_t num_of_layers, // denselayer 기준
 }
 
 Matrix_T<fp32> Model::forward_batch(const Matrix_T<fp16>& x) {
-    Matrix_T<fp16> current_input = x;
+    Matrix_T<fp16> current_input = x; // cp
     Matrix_T<fp32> layer_output(_batch_size, _hidden_dim);
 
-    for (uint64_t i = 0; i < _layers.size(); i++) {
+    for (uint64_t i = 0; i< _layers.size(); i++) {
         auto& layer = _layers[i];
 
         uint64_t current_output_dim =
@@ -84,22 +84,32 @@ Matrix_T<fp32> Model::forward_batch(const Matrix_T<fp16>& x) {
 
 // WIP
 Matrix_T<fp32> Model::backward_batch(const Matrix_T<fp32>& y) { // loss를 받음
-    Matrix_T<fp32> current_input = y; // 얘를 시작으로 상위 레이어 순회돌면서 역전파시키기
-    Matrix_T<fp32> layer_output(_batch_size, _output_dim);
+    Matrix_T<fp32> current_grad = y; // 얘를 시작으로 상위 레이어 순회돌면서 역전파시키기
+    Matrix_T<fp32> grad_output(_batch_size, _output_dim);
     for (uint64_t i = _layers.size()-1; i>= 0; i--) {
-        auto& layer = _layers[i];
+        auto& grad = _layers[i];
 
         uint64_t current_output_dim =
-            (i == 0) ? _output_dim : _hidden_dim;
+            (i == 0) ? _input_dim : (i == _layers.size()-1 ? _output_dim : _hidden_dim);
 
-        if (layer_output.row() != _batch_size ||
-            layer_output.col() != current_output_dim) {
-            layer_output = Matrix_T<fp32>(_batch_size, current_output_dim);
+        if (grad_output.row() != _batch_size ||
+            grad_output.col() != current_output_dim) {
+            grad_output = Matrix_T<fp32>(_batch_size, current_output_dim);
         }
-        
 
-        layer->backward(current_input, layer_output);
+        grad->backward(current_grad, grad_output);
 
-        // ...
+        if (i> 0) {
+            if (current_grad.row() != grad_output.row() ||
+                current_grad.col() != grad_output.col()) {
+                current_grad = Matrix_T<fp32>(grad_output.row(), grad_output.col());
+            }
+            const auto& out_data  = grad_output.data(View::NT);
+            auto& next_data = current_grad.data(View::NT);
+            for (uint64_t j = 0; j < out_data.size(); ++j) {
+                next_data[j] = static_cast<fp32>(out_data[j]);
+            }
+        }
     }
+    return grad_output;
 }
