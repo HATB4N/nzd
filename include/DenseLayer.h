@@ -45,11 +45,17 @@ private:
     Matrix_T<fp16> _x_cache;
     Matrix_T<fp32> _z_cache;
 
-    ActFunc act_func;
+    ActFunc _act_func;
     void (*_act)(Matrix_T<fp32> &);
     void (*_act_difr)(Matrix_T<fp32> &);
     std::shared_ptr<IWeightInitializer> _initializer;
-    
+
+    // runtime binding for backward one-hot-encoding
+    using BackwardImpl = void (DenseLayer::*)(Matrix_T<fp32>&, Matrix_T<fp32>&);
+    BackwardImpl _backward_runner;
+    void _bw_impl_standard(Matrix_T<fp32>& dR, Matrix_T<fp32>& dX);
+    void _bw_impl_bypass(Matrix_T<fp32>& dR, Matrix_T<fp32>& dX);
+    void _compute_gradients(Matrix_T<fp32>& dR, Matrix_T<fp32>& dX);
 };
 
 #endif // DENSELAYER_H

@@ -5,20 +5,6 @@
 #include <algorithm>
 #include "Common/Gemm.h"
 
-// 나중에 분리
-enum class Job : uint8_t {
-    FORWARD,
-    BACKWARD
-};
-using JobFn = void(*)(Matrix_T<fp32>&);
-void job_forward(Matrix_T<fp32> &r);
-void job_backward(Matrix_T<fp32> &r);
-constexpr JobFn JOB_TABLE[] = { // 나중에 ExecPlan으로
-    &job_forward,
-    &job_backward
-};
-inline JobFn target_job(Job j);
-
 // 일단 mnist모듈이랑 합쳐둠. 나중에 load는 따로 설정하게
 Train::Train(uint64_t epochs,
              uint64_t bpe, // 구조체로 hyper parms & config 설정해서 RW하게
@@ -38,7 +24,7 @@ int Train::init() {
     // -----LOAD MNIST END----- //
     this->_input_dim = static_cast<uint64_t>(_mnist->get_rows() * _mnist->get_cols());
     this->_total_data = static_cast<uint64_t>(_mnist->get_total());
-    if (_model->init(10, _input_dim, _output_dim, _hidden_dim, _batches_per_epoch)) return -1;
+    if (_model->init(2, _input_dim, _output_dim, _hidden_dim, _batches_per_epoch)) return -1;
     return 0;
 }
 
@@ -56,19 +42,12 @@ void Train::train_one_epoch() {
         // -----LOAD DATASET END----- //
 
         // -----FORWARD 1 PASS BEGIN----- //
-        Job flag = Job::FORWARD;
-        JobFn _output_layer_proc = target_job(flag); // activate
-
         Matrix_T<fp32> logits = _model->forward_batch(x); // forward
-        _output_layer_proc(logits); // logits := softmax(logits) // Tee처럼 파이프라인 분기해서 출력 등 가능하게
         // -----FORWARD 1 PASS END ----- //
 
         // -----BADKWARD 1 PASS BEGIN----- //
-        flag = Job::BACKWARD;
-        _output_layer_proc = target_job(flag); 
-
-        gemm().sub<fp32, fp32>(logits, y);
-        // Matrix_T<fp32>dx = _model->backward_batch(logits);
+        gemm().sub<fp32, fp32>(logits, y); // get loss grad (OUTPUT == SOFTMAX)조건 등으로 나중에 일반화
+        Matrix_T<fp32>dx = _model->backward_batch(logits);
         // -----BADKWARD 1 PASS END----- //
         
         _current_idx += _batch_size;
@@ -100,19 +79,4 @@ Matrix_T<fp16> Train::_load_dataset() {
     Matrix_T<fp16> x(_batch_size, _input_dim);
     _batch_size = _mnist->get_batch<uint64_t>(_batches_per_epoch, x);
     return x;
-}
-
-// 헬퍼
-// Softmax 기준 actviation layer
-void job_forward(Matrix_T<fp32> &r) {
-    void (*_act)(Matrix_T<fp32> &) = resolve_act(ActFunc::SOFTMAX);
-    _act(r);
-}
-
-void job_backward(Matrix_T<fp32> &r) {
-    return;
-}
-
-inline JobFn target_job(Job j) {
-    return JOB_TABLE[static_cast<size_t>(j)];
 }

@@ -41,7 +41,7 @@ int Model::init(uint64_t num_of_layers, // denselayer 기준
         }
 
     _layers.push_back(
-        std::make_unique<DenseLayer>(ActFunc::LINEAR, // dz = p - y <-> last layer exception. act @ loss func
+        std::make_unique<DenseLayer>(ActFunc::SOFTMAX,
                                      last_dim, 
                                      _output_dim, 
                                      he, 
@@ -86,15 +86,15 @@ Matrix_T<fp32> Model::forward_batch(const Matrix_T<fp16>& x) {
 Matrix_T<fp32> Model::backward_batch(const Matrix_T<fp32>& y) { // loss를 받음
     Matrix_T<fp32> current_grad = y; // 얘를 시작으로 상위 레이어 순회돌면서 역전파시키기
     Matrix_T<fp32> grad_output(_batch_size, _output_dim);
-    for (uint64_t i = _layers.size()-1; i>= 0; i--) {
+    for (uint64_t i = _layers.size()-1; i> 0; i--) {
         auto& grad = _layers[i];
 
-        uint64_t current_output_dim =
-            (i == 0) ? _input_dim : (i == _layers.size()-1 ? _output_dim : _hidden_dim);
+        uint64_t next_output_dim =
+            (i> 0) ? _hidden_dim : _output_dim;
 
         if (grad_output.row() != _batch_size ||
-            grad_output.col() != current_output_dim) {
-            grad_output = Matrix_T<fp32>(_batch_size, current_output_dim);
+            grad_output.col() != next_output_dim) {
+            grad_output = Matrix_T<fp32>(_batch_size, next_output_dim);
         }
 
         grad->backward(current_grad, grad_output);

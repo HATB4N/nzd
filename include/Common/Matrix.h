@@ -102,6 +102,8 @@ public:
 
     template <typename T1, typename T2>
     void element_wise_multiply(Matrix_T<T1>& target, Matrix_T<T2>& other) {
+        // std::cout << target.row() << ", " << target.col() << std::endl;
+        // std::cout << other.row() << ", " << other.col() << std::endl;
         assert(target.row() == other.row() && target.col() == other.col());
         assert(target.size() == other.size());
 

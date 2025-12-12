@@ -14,14 +14,17 @@ DenseLayer::DenseLayer(ActFunc act_enum,
                                        _grad_weights(input_dim, output_dim), _grad_biases(1, output_dim),
                                        _x_cache(input_dim, output_dim), _z_cache(input_dim, output_dim), 
                                        _act(resolve_act(act_enum)), _act_difr(resolve_act_difr(act_enum)),
-                                       _initializer(std::move(initializer)) {                          
+                                       _initializer(std::move(initializer)), _act_func(act_enum) {                          
     if (_initializer) { // allow nullptr
         _initializer->initialize(_weights, _input_dim, _output_dim);
         std::fill(_biases.data(View::NT).begin(), _biases.data(View::NT).end(), static_cast<fp16>(0.0f));
     }
+    if(_act_func == ActFunc::SOFTMAX) { // unlikely
+        _backward_runner = &DenseLayer::_bw_impl_bypass;
+    } else { // likely
+        _backward_runner = &DenseLayer::_bw_impl_standard;
+    }
 }
-
-
 // R = σ(XW+b), multiply(Y, X, W, View::T)
 void DenseLayer::forward(const Matrix_T<fp16> &x, Matrix_T<fp32> &r) {
     _x_cache = x;
@@ -33,10 +36,7 @@ void DenseLayer::forward(const Matrix_T<fp16> &x, Matrix_T<fp32> &r) {
 
 // multiply(dX, dY, W, View::NT)
 void DenseLayer::backward(Matrix_T<fp32>& dR, Matrix_T<fp32>& dX) {
-    // // d_in = prev grad & d_out = next grad(result)
-    // _act_difr(this->_z_cache);
-    // gemm().element_wise_multiply<fp32, fp32>(d_in, _z_cache);
-    // d_out = d_in;
+    (this->*_backward_runner)(dR, dX);
 }
 
 // W := W - lr
@@ -69,5 +69,19 @@ void DenseLayer::set_bias(const Matrix_T<fp16>& new_biases) {
 }
 
 ActFunc DenseLayer::get_act_func() {
-    return this->act_func;
+    return this->_act_func;
+}
+
+void DenseLayer::_bw_impl_standard(Matrix_T<fp32>& dR, Matrix_T<fp32>& dX) {
+    _act_difr(this->_z_cache); 
+    gemm().element_wise_multiply<fp32, fp32>(dR, this->_z_cache);
+    _compute_gradients(dR, dX); 
+}
+
+void DenseLayer::_bw_impl_bypass(Matrix_T<fp32>& dR, Matrix_T<fp32>& dX) {
+    _compute_gradients(dR, dX);
+}
+
+void DenseLayer::_compute_gradients(Matrix_T<fp32>& dR, Matrix_T<fp32>& dX) {
+    return;
 }
