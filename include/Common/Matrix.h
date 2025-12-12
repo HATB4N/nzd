@@ -66,8 +66,8 @@ public:
                   const Matrix_T<T_IN> &x, 
                   const Matrix_T<T_IN> &w) {
         assert(x.col() == w.row());
-        auto _x = std::span<const fp16>(x.data(View::NT));
-        auto _wt = std::span<const fp16>(w.data(View::T));
+        auto _x = std::span<const T_IN>(x.data(View::NT));
+        auto _wt = std::span<const T_IN>(w.data(View::T));
         auto _r = std::span<T_OUT>(r.data(View::NT));
 
         size_t batch_size =  x.row();
