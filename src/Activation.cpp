@@ -23,11 +23,11 @@ constexpr ActFn ACT_DIFR_TABLE[] = {
 };
 
 ActFn resolve_act(ActFunc f) {
-    return ACT_TABLE[static_cast<size_t>(f)];
+    return ACT_TABLE[static_cast<uint8_t>(f)];
 }
 
 ActFn resolve_act_difr(ActFunc f) {
-    return ACT_DIFR_TABLE[static_cast<size_t>(f)];
+    return ACT_DIFR_TABLE[static_cast<uint8_t>(f)];
 }
 
 void Act::softmax(Matrix_T<fp32> &m) {

@@ -51,29 +51,30 @@ int Model::init(uint64_t num_of_layers, // denselayer 기준
 }
 
 Matrix_T<fp32> Model::forward_batch(const Matrix_T<fp16>& x) {
-    Matrix_T<fp16> current_input = x; // cp
-    Matrix_T<fp32> layer_output(_batch_size, _hidden_dim);
+    const uint64_t current_batch_size = x.row();
+    if (current_batch_size == 0) return Matrix_T<fp32>(0,0);
+
+    Matrix_T<fp16> current_input = x;
+    Matrix_T<fp32> layer_output(0, 0);
 
     for (uint64_t i = 0; i< _layers.size(); i++) {
         auto& layer = _layers[i];
 
-        uint64_t current_output_dim =
-            (i == _layers.size() - 1) ? _output_dim : _hidden_dim;
+        uint64_t current_output_dim = (i == _layers.size() - 1) ? _output_dim : _hidden_dim;
 
-        if (layer_output.row() != _batch_size ||
-            layer_output.col() != current_output_dim) {
-            layer_output = Matrix_T<fp32>(_batch_size, current_output_dim);
+        if (layer_output.row() != current_batch_size || layer_output.col() != current_output_dim) {
+            layer_output = Matrix_T<fp32>(current_batch_size, current_output_dim);
         }
 
-        layer->forward(current_input, layer_output); // 순수재미 Goat
+        layer->forward(current_input, layer_output);
 
         if (i < _layers.size() - 1) {
-            if (current_input.row() != layer_output.row() ||
-                current_input.col() != layer_output.col()) {
-                current_input = Matrix_T<fp16>(layer_output.row(), layer_output.col());
+            if (current_input.row() != current_batch_size || current_input.col() != current_output_dim) {
+                current_input = Matrix_T<fp16>(current_batch_size, current_output_dim);
             }
             const auto& out_data  = layer_output.data(View::NT);
             auto& next_data = current_input.data(View::NT);
+            #pragma omp parallel for
             for (uint64_t j = 0; j < out_data.size(); ++j) {
                 next_data[j] = static_cast<fp16>(out_data[j]);
             }
@@ -82,34 +83,30 @@ Matrix_T<fp32> Model::forward_batch(const Matrix_T<fp16>& x) {
     return layer_output;
 }
 
-// WIP
 Matrix_T<fp32> Model::backward_batch(const Matrix_T<fp32>& y) { // loss를 받음
-    Matrix_T<fp32> current_grad = y; // 얘를 시작으로 상위 레이어 순회돌면서 역전파시키기
-    Matrix_T<fp32> grad_output(_batch_size, _output_dim);
-    for (uint64_t i = _layers.size()-1; i> 0; i--) {
-        auto& grad = _layers[i];
+    const uint64_t current_batch_size = y.row();
+    if (current_batch_size == 0) return Matrix_T<fp32>(0,0);
 
-        uint64_t next_output_dim =
-            (i> 0) ? _hidden_dim : _output_dim;
+    Matrix_T<fp32> current_grad = y;
+    Matrix_T<fp32> grad_output(0,0);
 
-        if (grad_output.row() != _batch_size ||
-            grad_output.col() != next_output_dim) {
-            grad_output = Matrix_T<fp32>(_batch_size, next_output_dim);
+    for (int i = _layers.size() - 1; i>= 0; i--) {
+        auto& layer = _layers[i];
+
+        // Determine the input dimension for the current layer to correctly size grad_output.
+        // Based on the init() logic, layer 0 has `_input_dim` and all others have `_hidden_dim`.
+        uint64_t input_dim_for_this_layer = (i == 0) ? _input_dim : _hidden_dim;
+
+        if (grad_output.row() != current_batch_size || grad_output.col() != input_dim_for_this_layer) {
+            grad_output = Matrix_T<fp32>(current_batch_size, input_dim_for_this_layer);
         }
 
-        grad->backward(current_grad, grad_output);
-
-        if (i> 0) {
-            if (current_grad.row() != grad_output.row() ||
-                current_grad.col() != grad_output.col()) {
-                current_grad = Matrix_T<fp32>(grad_output.row(), grad_output.col());
-            }
-            const auto& out_data  = grad_output.data(View::NT);
-            auto& next_data = current_grad.data(View::NT);
-            for (uint64_t j = 0; j < out_data.size(); ++j) {
-                next_data[j] = static_cast<fp32>(out_data[j]);
-            }
-        }
+        layer->backward(current_grad, grad_output);
+        
+        std::swap(current_grad, grad_output);
     }
-    return grad_output;
+    for (auto& layer : _layers) {
+        layer->update();
+    }
+    return current_grad;
 }

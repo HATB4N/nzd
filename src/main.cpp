@@ -6,11 +6,11 @@ void machine();
 int main() {
     machine();
     Train train(50,
-                256, // batch size
+                128, // batch size
                 10, // output dim
-                1024); // hidden dim
+                128); // hidden dim
     if(train.init()) exit(-1);
-    train.train_one_epoch();
+    train.train();
 
     return 0;
 }

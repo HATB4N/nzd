@@ -43,52 +43,55 @@ public:
     uint64_t size() const { return _row * _col; }
     uint64_t row() const { return _row; }
     uint64_t col() const { return _col; }
+    uint64_t row(View v) const { return (v == View::NT) ? _row : _col; }
+    uint64_t col(View v) const { return (v == View::NT) ? _col : _row; }
+    static View flip(View v) { return (v == View::NT) ? View::T : View::NT; }
     
     std::pmr::vector<T>& data(View view = View::NT) {
-        if(view == View::NT) {
-            if(_m.empty()) {
-                if(get_T && !get_NT && !expired_T) {
-                    _transpose_from_t();
-                } else {
-                    _m.resize(size());
-                    get_NT = true;
-                } 
+        if (view == View::NT) {
+            if (expired_NT) {
+                _transpose_from_t();
+            }
+            if (!get_NT) { // First time access
+                _m.resize(size());
+                get_NT = true;
             }
             expired_T = true;
+            expired_NT = false;
             return _m;
-        } else {
-            if(_m_t.empty()) {
-                if (get_NT && !get_T && !expired_NT) {
-                    _transpose_from_nt();
-                } else {
-                    _m_t.resize(size());
-                    get_T = true;
-                }
+        } else { // view == View::T
+            if (expired_T) {
+                _transpose_from_nt();
             }
+            if (!get_T) { // first access
+                _m_t.resize(size());
+                get_T = true;
+            }
+            expired_NT = true;
+            expired_T = false;
+            return _m_t;
         }
-        expired_NT = true;
-        return _m_t;
     }
 
     const std::pmr::vector<T>& data(View view = View::NT) const {
         if (view == View::NT) {
-            if (_m.empty()) {
-                if (get_T && !expired_T) {
-                    const_cast<Matrix_T*>(this)->_transpose_from_t();
-                } else {
-                    const_cast<Matrix_T*>(this)->_m.resize(size());
-                    const_cast<Matrix_T*>(this)->get_NT = true;
-                }
-            } return _m;
-        } else {
-            if (_m_t.empty()) {
-                if (get_NT && !expired_NT) {
-                    const_cast<Matrix_T*>(this)->_transpose_from_nt();
-                } else {
-                    const_cast<Matrix_T*>(this)->_m_t.resize(size()); 
-                    const_cast<Matrix_T*>(this)->get_T = true;
-                }
-            } return _m_t;
+            if (expired_NT) {
+                const_cast<Matrix_T*>(this)->_transpose_from_t();
+            }
+            if (!get_NT) {
+                const_cast<Matrix_T*>(this)->_m.resize(size());
+                const_cast<Matrix_T*>(this)->get_NT = true;
+            }
+            return _m;
+        } else { // view == View::T
+            if (expired_T) {
+                const_cast<Matrix_T*>(this)->_transpose_from_nt();
+            }
+            if (!get_T) {
+                const_cast<Matrix_T*>(this)->_m_t.resize(size());
+                const_cast<Matrix_T*>(this)->get_T = true;
+            }
+            return _m_t;
         }
     }
 

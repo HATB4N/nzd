@@ -20,7 +20,7 @@ CXXSTD := -std=c++20
 WARNINGS := -Wall
 INCLUDES := -I$(INCLUDE_DIR)
 
-RELEASE_CXXFLAGS := -O3 -march=native -ffast-math -funroll-loops -fopenmp
+RELEASE_CXXFLAGS := -O3 -march=native -fopenmp
 RELEASE_LDFLAGS := -flto -fopenmp -pthread
 DEBUG_CXXFLAGS := -O0 -g -fno-omit-frame-pointer
 DEBUG_LDFLAGS :=

@@ -13,7 +13,6 @@
 class Matrix {
 public:
     Matrix(unsigned int threads = 14);
-    ~Matrix();
     void set_threads(unsigned int threads); // 나중에 work별 threads를 상위에서 유동적으로 조절하고 병렬로 실행 가능하게...?
 
     // r is (batch, out_dim), b is (1, out_dim)
@@ -23,6 +22,7 @@ public:
         auto& r_data = r.data(View::NT);
         const auto& b_data = b.data(View::NT);
 
+        #pragma omp parallel for schedule(static)
         for(size_t i = 0; i < r.row(); ++i) {
             for(size_t j = 0; j < r.col(); ++j) {
                 r_data[i * r.col() + j] += static_cast<T_OUT>(b_data[j]);
@@ -47,7 +47,7 @@ public:
     // r:= r - b // 일단 위는 가중치 sum용인데 얜 one hot용이니까 다르게 구현함.
     // r + 공통편향이었다면, 얜 그냥 component wise하게
     template <typename T_IN, typename T_OUT>
-    void sub(Matrix_T<T_OUT> &r, const Matrix_T<T_IN> &b) {
+    void sub(Matrix_T<T_OUT> &r, const Matrix_T<T_IN> &b, fp32 lr = 1.0f) {
         assert(r.row() == b.row() && r.col() == b.col());
         uint64_t sz = r.size();
 
@@ -56,43 +56,48 @@ public:
         
         #pragma omp parallel for simd schedule(static)
         for(uint64_t i = 0; i< sz; i++) {
-            r_data[i] -= static_cast<T_OUT>(b_data[i]);
+            r_data[i] = static_cast<T_OUT>(static_cast<float>(r_data[i]) - lr * static_cast<float>(b_data[i]));
         }
     }
 
     // x is (batch, in_dim), w is (in_dim, out_dim), r is (batch, out_dim)
-    template <typename T_IN, typename T_OUT>
-    void multiply(Matrix_T<T_OUT> &r, 
-                  const Matrix_T<T_IN> &x, 
-                  const Matrix_T<T_IN> &w) {
-        assert(x.col() == w.row());
-        auto _x = std::span<const T_IN>(x.data(View::NT));
-        auto _wt = std::span<const T_IN>(w.data(View::T));
-        auto _r = std::span<T_OUT>(r.data(View::NT));
+    template <typename TA, typename TB, typename TC>
+    void multiply(Matrix_T<TC>& c, // res
+                  const Matrix_T<TA>& a, // left hand
+                  const Matrix_T<TB>& b, // right hand
+                  View a_view = View::NT,
+                  View b_view = View::NT) {
+        
+        const size_t M = a.row(a_view);
+        const size_t K = a.col(a_view);
+        const size_t K2 = b.row(b_view);
+        const size_t N = b.col(b_view);
+        assert(K == K2);
+        assert(c.row() == M && c.col() == N);
 
-        size_t batch_size =  x.row();
-        size_t in_dim = x.col();
-        size_t out_dim = w.col();
+        auto A = std::span<const TA>(a.data(a_view));
+        auto BT = std::span<const TB>(b.data(b.flip(b_view)));
+        auto C = std::span<TC>(c.data(View::NT));
+
+        const size_t cs = M / _threads;
+        size_t offset = 0;
 
         std::vector<std::future<void>> results;
         results.reserve(_threads);
 
-        const size_t cs = batch_size / _threads;
-        size_t offset = 0;
-
         for (unsigned int i = 0; i < _threads; ++i) {
-            const size_t current_batch_size = (i == _threads - 1) ? (batch_size - offset) : cs;
-            if (current_batch_size == 0) continue;
+            const size_t curM = (i == _threads - 1) ? (M - offset) : cs;
+            if (curM == 0) continue;
 
-            auto _x_part = _x.subspan(offset * in_dim, current_batch_size * in_dim);
-            auto _r_part = _r.subspan(offset * out_dim, current_batch_size * out_dim);
+            auto A_part = A.subspan(offset * K, curM * K);
+            auto C_part = C.subspan(offset * N, curM * N);
             
             results.emplace_back(
                 ThreadPool::instance().enqueue([=, this]() {
-                    this->mul_part<T_IN, T_OUT>(_x_part, _wt, _r_part, current_batch_size, in_dim, out_dim);
+                    this->mul_part<TA, TB, TC>(A_part, BT, C_part, curM, K, N);
                 })
             );
-            offset += current_batch_size;
+            offset += curM;
         }
 
         for (auto& fut : results) {
@@ -143,25 +148,23 @@ public:
 
 private:
     // R = XW  <=> R = X(W^T)^T
-    template <typename T_IN, typename T_OUT>
-    void mul_part(std::span<const T_IN> x_part, 
-                  std::span<const T_IN> w_transposed, 
-                  std::span<T_OUT> r_part, 
-                  size_t x_rows, 
-                  size_t in_dim, 
-                  size_t out_dim) {
-        for (size_t i = 0; i < x_rows; ++i) {
-            const T_IN* x_row = &x_part[i * in_dim];
-            for (size_t j = 0; j < out_dim; ++j) {
-                const T_IN* wt_row = &w_transposed[j * in_dim];
+    template <typename TA, typename TB, typename TC>
+    void mul_part(std::span<const TA> A_part,
+                  std::span<const TB> BT,
+                  std::span<TC> C_part,
+                  size_t curM, size_t K, size_t N) {
+        for (size_t i = 0; i < curM; ++i) {
+            const TA* a_row = &A_part[i * K];
+            for (size_t j = 0; j < N; ++j) {
+                const TB* bt_row = &BT[j * K];
                 
-                T_OUT val = static_cast<T_OUT>(0); 
+                fp32 val = 0.0f;
 
                 #pragma omp simd reduction(+:val)
-                for (size_t k = 0; k < in_dim; ++k) {
-                    val += static_cast<T_OUT>(x_row[k]) * static_cast<T_OUT>(wt_row[k]);
+                for (size_t k = 0; k < K; ++k) {
+                    val += static_cast<fp32>(a_row[k]) * static_cast<fp32>(bt_row[k]);
                 }
-                r_part[i * out_dim + j] = val;
+                C_part[i * N + j] = static_cast<TC>(val);
             }
         }
     }
