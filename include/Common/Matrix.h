@@ -18,7 +18,8 @@ public:
 
     // r is (batch, out_dim), b is (1, out_dim)
     template <typename T_IN, typename T_OUT>
-    void add(Matrix_T<T_OUT> &r, const Matrix_T<T_IN> &b) {
+    void add_bias(Matrix_T<T_OUT> &r, const Matrix_T<T_IN> &b) {
+        assert(r.col() == b.col());
         auto& r_data = r.data(View::NT);
         const auto& b_data = b.data(View::NT);
 
@@ -29,12 +30,26 @@ public:
         }
     }
 
+    template <typename T_IN, typename T_OUT>
+    void add(Matrix_T<T_OUT> &r, const Matrix_T<T_IN> &b) {
+        assert(r.row() == b.row() && r.col() == b.col());
+        uint64_t sz = r.row()*r.col();
+
+        auto& r_data = r.data(View::NT);
+        const auto& b_data = b.data(View::NT);
+        
+        #pragma omp parallel for simd schedule(static)
+        for(uint64_t i = 0; i< sz; i++) {
+            r_data[i] += static_cast<T_OUT>(b_data[i]);
+        }
+    }
+
     // r:= r - b // 일단 위는 가중치 sum용인데 얜 one hot용이니까 다르게 구현함.
     // r + 공통편향이었다면, 얜 그냥 component wise하게
     template <typename T_IN, typename T_OUT>
     void sub(Matrix_T<T_OUT> &r, const Matrix_T<T_IN> &b) {
-        uint64_t sz = r.row()*r.col();
-        assert(sz== b.row()*b.col());
+        assert(r.row() == b.row() && r.col() == b.col());
+        uint64_t sz = r.size();
 
         auto& r_data = r.data(View::NT);
         const auto& b_data = b.data(View::NT);
@@ -47,7 +62,12 @@ public:
 
     // x is (batch, in_dim), w is (in_dim, out_dim), r is (batch, out_dim)
     template <typename T_IN, typename T_OUT>
-    void multiply(Matrix_T<T_OUT> &r, const Matrix_T<T_IN> &x, const Matrix_T<T_IN> &w, View x_view_type = View::NT,  View w_view_type = View::T) {
+    void multiply(Matrix_T<T_OUT> &r, 
+                  const Matrix_T<T_IN> &x, 
+                  const Matrix_T<T_IN> &w, 
+                  View x_view_type = View::NT,  
+                  View w_view_type = View::T) {
+        assert(x.col() == w.row());
         auto _x = std::span<const T_IN>(x.data(x_view_type));
         auto _w = std::span<const T_IN>(w.data(w_view_type));
         auto _r = std::span<T_OUT>(r.data(x_view_type)); // 불확실
@@ -84,6 +104,7 @@ public:
 
     template <typename T1, typename T2>
     void element_wise_multiply(Matrix_T<T1>& target, Matrix_T<T2>& other) {
+        assert(target.row() == other.row() && target.col() == other.col());
         assert(target.size() == other.size());
 
         auto& target_data = target.data(View::NT);

@@ -8,10 +8,10 @@
 Model::Model() {}
 
 int Model::init(uint64_t num_of_layers, // denselayer 기준
-                 uint64_t input_dim,
-                 uint64_t output_dim,
-                 uint64_t hidden_dim,
-                 uint64_t batch_size) {
+                uint64_t input_dim,
+                uint64_t output_dim,
+                uint64_t hidden_dim,
+                uint64_t batch_size) {
     _nol = num_of_layers;
     _input_dim = input_dim;
     _output_dim =output_dim;

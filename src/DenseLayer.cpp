@@ -26,14 +26,13 @@ DenseLayer::DenseLayer(ActFunc act_enum,
 void DenseLayer::forward(const Matrix_T<fp16> &x, Matrix_T<fp32> &r) {
     _x_cache = x;
     gemm().multiply<fp16, fp32>(r, x, _weights);
-    // _gemm->multiply<fp16, fp32>(r, x, _weights);
-    gemm().add<fp16, fp32>(r, _biases);
-    _z_cache = r;
+    gemm().add_bias<fp16, fp32>(r, _biases);
+    _z_cache = r; // 용량 고려하면 gemm().multiply<fp16, fp32>(_z_cache, _x_cache, _weights);이 나을지도...
     _act(r);
 }
 
 // multiply(dX, dY, W, View::NT)
-void DenseLayer::backward(Matrix_T<fp32>& d_in, Matrix_T<fp32>& d_out) {
+void DenseLayer::backward(Matrix_T<fp32>& dR, Matrix_T<fp32>& dX) {
     // // d_in = prev grad & d_out = next grad(result)
     // _act_difr(this->_z_cache);
     // gemm().element_wise_multiply<fp32, fp32>(d_in, _z_cache);
