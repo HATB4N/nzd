@@ -89,13 +89,13 @@ void Train::test() {
         }
 
         // imgs
-        Matrix_T<fp16> x(current_batch_size, test_input_dim);
+        Matrix_T<fp32> x(current_batch_size, test_input_dim);
         auto& x_data = x.data(View::NT);
         for (uint64_t j = 0; j < current_batch_size; ++j) {
             auto image_span = test_mnist->get_image(test_current_idx + j);
-            fp16* dst_ptr = &x_data[j * test_input_dim];
+            fp32* dst_ptr = &x_data[j * test_input_dim];
             for (size_t p = 0; p < test_input_dim; ++p) {
-                dst_ptr[p] = static_cast<fp16>(image_span[p] / 255.0f);
+                dst_ptr[p] = static_cast<fp32>(image_span[p] / 255.0f);
             }
         }
 
@@ -141,7 +141,7 @@ void Train::train_one_epoch() {
         // -----LOAD DATASET BEGIN----- //
         Matrix_T<fp32> y = this->_get_label_batch_onehot();
         if (_batch_size == 0) continue; // blank cond.
-        Matrix_T<fp16> x = this->_load_dataset();
+        Matrix_T<fp32> x = this->_load_dataset();
         // -----LOAD DATASET END----- //
 
         // -----FORWARD 1 PASS BEGIN----- //
@@ -197,12 +197,12 @@ Matrix_T<fp32> Train::_get_label_batch_onehot() {
     return y;
 }
 
-Matrix_T<fp16> Train::_load_dataset() {
+Matrix_T<fp32> Train::_load_dataset() {
     if (_batch_size == 0) {
-        return Matrix_T<fp16>(0, 0);
+        return Matrix_T<fp32>(0, 0);
     }
 
-    Matrix_T<fp16> x(_batch_size, _input_dim);
+    Matrix_T<fp32> x(_batch_size, _input_dim);
     auto& x_data = x.data(View::NT);
 
     #pragma omp parallel for
@@ -210,9 +210,9 @@ Matrix_T<fp16> Train::_load_dataset() {
         uint64_t data_index = _data_indices[_current_idx + i];
         auto image_span = _mnist->get_image(data_index);
         
-        fp16* dst_ptr = &x_data[i * _input_dim];
+        fp32* dst_ptr = &x_data[i * _input_dim];
         for (size_t p = 0; p < _input_dim; ++p) {
-            dst_ptr[p] = static_cast<fp16>(image_span[p] / 255.0f);
+            dst_ptr[p] = static_cast<fp32>(image_span[p] / 255.0f);
         }
     }
     return x;

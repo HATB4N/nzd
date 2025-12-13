@@ -41,11 +41,11 @@ int Model::init(uint64_t num_of_layers, // denselayer 기준
     return 0; // add error accumulation (ret+=...)
 }
 
-Matrix_T<fp32> Model::forward_batch(const Matrix_T<fp16>& x) {
+Matrix_T<fp32> Model::forward_batch(const Matrix_T<fp32>& x) {
     const uint64_t current_batch_size = x.row();
     if (current_batch_size == 0) return Matrix_T<fp32>(0,0);
 
-    Matrix_T<fp16> current_input = x;
+    Matrix_T<fp32> current_input = x;
     Matrix_T<fp32> layer_output(0, 0);
 
     for (uint64_t i = 0; i< _layers.size(); i++) {
@@ -61,13 +61,13 @@ Matrix_T<fp32> Model::forward_batch(const Matrix_T<fp16>& x) {
 
         if (i < _layers.size() - 1) {
             if (current_input.row() != current_batch_size || current_input.col() != current_output_dim) {
-                current_input = Matrix_T<fp16>(current_batch_size, current_output_dim);
+                current_input = Matrix_T<fp32>(current_batch_size, current_output_dim);
             }
             const auto& out_data  = layer_output.data(View::NT);
             auto& next_data = current_input.data(View::NT);
             #pragma omp parallel for
             for (uint64_t j = 0; j < out_data.size(); ++j) {
-                next_data[j] = static_cast<fp16>(out_data[j]);
+                next_data[j] = static_cast<fp32>(out_data[j]);
             }
         }
     }

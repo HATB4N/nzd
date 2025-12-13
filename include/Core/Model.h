@@ -15,7 +15,7 @@ public:
               uint64_t output_dim,
               uint64_t hidden_dim,
               uint64_t batch_size);
-    Matrix_T<fp32> forward_batch(const Matrix_T<fp16>& x);
+    Matrix_T<fp32> forward_batch(const Matrix_T<fp32>& x);
     Matrix_T<fp32> backward_batch(const Matrix_T<fp32>& y);
     void apply_softmax_cross_entropy_backward(Matrix_T<fp32>& dx, const std::vector<uint8_t>& labels);
     int save_parms(); // @ ModelIO.cpp

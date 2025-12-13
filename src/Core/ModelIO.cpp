@@ -100,8 +100,8 @@ int Model::save_unit_parms(uint64_t index, std::ofstream& _fout) {
     for(auto &h : header) _fout.write((char *)&h, sizeof(h));
 
     // write parms
-    _fout.write(reinterpret_cast<const char*>(w_data.data()), w_data.size() * sizeof(fp16));
-    _fout.write(reinterpret_cast<const char*>(b_data.data()), b_data.size() * sizeof(fp16));
+    _fout.write(reinterpret_cast<const char*>(w_data.data()), w_data.size() * sizeof(fp32));
+    _fout.write(reinterpret_cast<const char*>(b_data.data()), b_data.size() * sizeof(fp32));
     return 0;
 }
 
@@ -130,18 +130,18 @@ int Model::load_unit_parms(std::ifstream& _fin) {
 
     // 파라미터 데이터 읽기
     uint64_t w_data_size = w_rows * w_cols;
-    std::vector<fp16> w_data(w_data_size);
-    _fin.read(reinterpret_cast<char*>(w_data.data()), w_data_size * sizeof(fp16));
+    std::vector<fp32> w_data(w_data_size);
+    _fin.read(reinterpret_cast<char*>(w_data.data()), w_data_size * sizeof(fp32));
 
     uint64_t b_data_size = b_rows * b_cols;
-    std::vector<fp16> b_data(b_data_size);
-    _fin.read(reinterpret_cast<char*>(b_data.data()), b_data_size * sizeof(fp16));
+    std::vector<fp32> b_data(b_data_size);
+    _fin.read(reinterpret_cast<char*>(b_data.data()), b_data_size * sizeof(fp32));
 
     if (_fin.fail()) return -1; // err
 
     try {
-        target_layer->set_weight(Matrix_T<fp16>(w_rows, w_cols, w_data));
-        target_layer->set_bias(Matrix_T<fp16>(b_rows, b_cols, b_data));
+        target_layer->set_weight(Matrix_T<fp32>(w_rows, w_cols, w_data));
+        target_layer->set_bias(Matrix_T<fp32>(b_rows, b_cols, b_data));
     } catch (const std::exception& e) {
         return -1; // err
     }

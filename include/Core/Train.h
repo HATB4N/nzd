@@ -28,7 +28,7 @@ private:
     const uint64_t _hidden_dim;
     std::unique_ptr<Mnist> _mnist;
     std::vector<uint64_t> _data_indices;
-    Matrix_T<fp16> _load_dataset();
+    Matrix_T<fp32> _load_dataset();
     Matrix_T<fp32> _get_label_batch_onehot();
     uint64_t _current_idx = 0;
 };

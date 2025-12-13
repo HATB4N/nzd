@@ -18,16 +18,16 @@ public:
                uint64_t idx); // 얘는 _layers에서의 index(physical id)임.
     ~DenseLayer() = default;
 
-    void forward(const Matrix_T<fp16> &x, Matrix_T<fp32> &r);
+    void forward(const Matrix_T<fp32> &x, Matrix_T<fp32> &r);
     void backward(Matrix_T<fp32>& d_in, Matrix_T<fp32>& d_out);
     void update();
 
-    Matrix_T<fp16>& get_weight() { return this->_weights; }
-    Matrix_T<fp16>& get_bias() { return this->_biases; }
+    Matrix_T<fp32>& get_weight() { return this->_weights; }
+    Matrix_T<fp32>& get_bias() { return this->_biases; }
     Matrix_T<fp32>& get_grad_weight() { return this->_grad_weights; }
     Matrix_T<fp32>& get_grad_bias() { return this->_grad_biases; }
-    void set_weight(const Matrix_T<fp16>& new_weights) { this->_weights = new_weights; }
-    void set_bias(const Matrix_T<fp16>& new_biases) { this->_biases = new_biases; }
+    void set_weight(const Matrix_T<fp32>& new_weights) { this->_weights = new_weights; }
+    void set_bias(const Matrix_T<fp32>& new_biases) { this->_biases = new_biases; }
     ActFunc get_act_type() { return this->_act_func; }
     
 private:
@@ -35,13 +35,13 @@ private:
     uint64_t _input_dim;
     uint64_t _output_dim;
 
-    Matrix_T<fp16> _weights;
-    Matrix_T<fp16> _biases;
+    Matrix_T<fp32> _weights;
+    Matrix_T<fp32> _biases;
 
     Matrix_T<fp32> _grad_weights;
     Matrix_T<fp32> _grad_biases;
 
-    Matrix_T<fp16> _x_cache;
+    Matrix_T<fp32> _x_cache;
     Matrix_T<fp32> _z_cache;
 
     ActFunc _act_func;

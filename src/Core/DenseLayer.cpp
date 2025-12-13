@@ -17,16 +17,16 @@ DenseLayer::DenseLayer(ActFunc act_enum,
                                        _initializer(std::move(initializer)), _act_func(act_enum) {                          
     if (_initializer) { // allow nullptr
         _initializer->initialize(_weights, _input_dim, _output_dim);
-        std::fill(_biases.data(View::NT).begin(), _biases.data(View::NT).end(), static_cast<fp16>(0.0f));
+        std::fill(_biases.data(View::NT).begin(), _biases.data(View::NT).end(), static_cast<fp32>(0.0f));
     }
     _runner = _bw_table[_act_func == ActFunc::SOFTMAX];
 }
 // R = σ(XW+b), multiply(Y, X, W, View::T)
-void DenseLayer::forward(const Matrix_T<fp16> &x, Matrix_T<fp32> &r) {
+void DenseLayer::forward(const Matrix_T<fp32> &x, Matrix_T<fp32> &r) {
     _x_cache = x;
     gemm().multiply(r, x, _weights);
-    gemm().add_bias<fp16, fp32>(r, _biases);
-    _z_cache = r; // 용량 고려하면 gemm().multiply<fp16, fp32>(_z_cache, _x_cache, _weights);이 나을지도...
+    gemm().add_bias<fp32, fp32>(r, _biases);
+    _z_cache = r; // 용량 고려하면 gemm().multiply<fp32, fp32>(_z_cache, _x_cache, _weights);이 나을지도...
     _act(r);
 }
 
@@ -43,14 +43,14 @@ void DenseLayer::update() {
     const auto& gw_data = _grad_weights.data(View::NT);
     #pragma omp parallel for
     for (size_t i = 0; i < w_data.size(); ++i) {
-        w_data[i] = static_cast<fp16>(static_cast<float>(w_data[i]) - lr * gw_data[i]);
+        w_data[i] = static_cast<fp32>(static_cast<float>(w_data[i]) - lr * gw_data[i]);
     }
 
     auto& b_data = _biases.data(View::NT);
     const auto& gb_data = _grad_biases.data(View::NT);
     #pragma omp parallel for
     for (size_t i = 0; i < b_data.size(); ++i) {
-        b_data[i] = static_cast<fp16>(static_cast<float>(b_data[i]) - lr * gb_data[i]);
+        b_data[i] = static_cast<fp32>(static_cast<float>(b_data[i]) - lr * gb_data[i]);
     }
 }
 

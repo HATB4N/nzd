@@ -9,7 +9,7 @@
 
 class IWeightInitializer {
 public:
-    virtual void initialize(Matrix_T<fp16>& weights, uint64_t input_dim, uint64_t output_dim) const = 0;
+    virtual void initialize(Matrix_T<fp32>& weights, uint64_t input_dim, uint64_t output_dim) const = 0;
     virtual ~IWeightInitializer() = default;
 };
 
@@ -21,9 +21,9 @@ public:
             this->_threads = std::min(threads, MAX_T);
         }
 
-    void initialize(Matrix_T<fp16>& weights, uint64_t input_dim, uint64_t output_dim) const override final {
+    void initialize(Matrix_T<fp32>& weights, uint64_t input_dim, uint64_t output_dim) const override final {
         auto &raw_data = weights.data(View::NT);
-        std::span<fp16> data_span(raw_data);
+        std::span<fp32> data_span(raw_data);
         uint64_t total_size = data_span.size();
 
         std::vector<std::future<void>> results;
@@ -49,7 +49,7 @@ public:
 protected:
     unsigned int _threads;
     uint32_t _seed;
-    virtual void fill_chunk(std::span<fp16> chunk, uint64_t input_dim, uint64_t output_dim, uint32_t chunk_seed) const = 0;
+    virtual void fill_chunk(std::span<fp32> chunk, uint64_t input_dim, uint64_t output_dim, uint32_t chunk_seed) const = 0;
 };
 
 #endif // IWEIGHTINITIALIZER_H
