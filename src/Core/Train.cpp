@@ -7,16 +7,16 @@
 #include <numeric>
 #include <random>
 #include "Common/Gemm.h"
+#include "Initializers/Initializer.h"
 
 // 일단 mnist모듈이랑 합쳐둠. 나중에 load는 따로 설정하게
 Train::Train(uint64_t epochs,
-             uint64_t bpe, // 구조체로 hyper parms & config 설정해서 RW하게
+             uint64_t batch_size, // 구조체로 hyper parms & config 설정해서 RW하게
              uint64_t nol,
              uint64_t output_dim, // 얘도 읽어오게
              uint64_t hidden_dim) : _epochs(epochs),
-                                    _batches_per_epoch(bpe), 
+                                    _batch_size(batch_size), 
                                     _nol(nol),
-                                    _model(std::make_unique<Model>()),
                                     _output_dim(output_dim),
                                     _hidden_dim(hidden_dim) {}
 
@@ -27,9 +27,16 @@ int Train::init() {
     _mnist = std::make_unique<Mnist>(); // 범용 말고 일단 mnist로
     if (_mnist->init(file, label)) return -1;
     // -----LOAD MNIST END----- //
+
     this->_input_dim = static_cast<uint64_t>(_mnist->get_rows() * _mnist->get_cols());
     this->_total_data = static_cast<uint64_t>(_mnist->get_total());
-    if (_model->init(_nol, _input_dim, _output_dim, _hidden_dim, _batches_per_epoch)) return -1;
+
+    _model = std::make_unique<Model>(_input_dim, _batch_size, InitType::HE);
+    for(uint64_t i = 0; i< _nol; i++) {
+        _model->add(_hidden_dim, ActFunc::RELU);
+    }
+    _model->add(_output_dim, ActFunc::SOFTMAX);
+
     _data_indices.resize(_total_data);
     std::iota(_data_indices.begin(), _data_indices.end(), 0);
     return 0;
@@ -64,14 +71,14 @@ void Train::test() {
     assert(test_input_dim == this->_input_dim);
 
     uint64_t test_current_idx = 0;
-    uint64_t iter = (test_total_data + _batches_per_epoch - 1) / _batches_per_epoch;
+    uint64_t iter = (test_total_data + _batch_size - 1) / _batch_size;
     
     double total_loss = 0.0;
     uint64_t correct_predictions = 0;
 
     for (uint64_t i = 0; i <iter; i++) {
         uint64_t remaining_data = test_total_data > test_current_idx ? test_total_data - test_current_idx : 0;
-        uint64_t current_batch_size = std::min((uint64_t)_batches_per_epoch, remaining_data);
+        uint64_t current_batch_size = std::min((uint64_t)_batch_size, remaining_data);
 
         if (current_batch_size == 0) continue;
 
@@ -134,13 +141,12 @@ void Train::test() {
 }
 
 void Train::train_one_epoch() {
-    uint64_t iter = (_total_data + _batches_per_epoch - 1) / _batches_per_epoch;
+    uint64_t iter = _total_data / _batch_size;
     _current_idx = 0;
 
     for (uint64_t i = 0; i < iter; i++) {
         // -----LOAD DATASET BEGIN----- //
         Matrix_T<fp32> y = this->_get_label_batch_onehot();
-        if (_batch_size == 0) continue; // blank cond.
         Matrix_T<fp32> x = this->_load_dataset();
         // -----LOAD DATASET END----- //
 
@@ -177,9 +183,7 @@ void Train::train_one_epoch() {
 }
 
 Matrix_T<fp32> Train::_get_label_batch_onehot() {
-    uint64_t remaining_data = _total_data > _current_idx ? _total_data - _current_idx : 0;
-    _batch_size = std::min((uint64_t)_batches_per_epoch, remaining_data);
-
+    // Batch normalization고려해서 안 나눠떨어지는 건 버리는 방향으로 진행함.
     if (_batch_size == 0) {
         return Matrix_T<fp32>(0, 0);
     }

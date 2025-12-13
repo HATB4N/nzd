@@ -7,14 +7,14 @@
 DenseLayer::DenseLayer(ActFunc act_enum,
                        uint64_t input_dim, 
                        uint64_t output_dim, 
-                       std::shared_ptr<IWeightInitializer> initializer,
+                       InitType init,
                        uint64_t idx) : _idx(idx),
                                        _input_dim(input_dim), _output_dim(output_dim),
                                        _weights(input_dim, output_dim), _biases(1, output_dim), 
                                        _grad_weights(input_dim, output_dim), _grad_biases(1, output_dim),
                                        _x_cache(0, 0), _z_cache(0, 0), // req reassign @ FW
                                        _act(resolve_act(act_enum)), _act_difr(resolve_act_difr(act_enum)),
-                                       _initializer(std::move(initializer)), _act_func(act_enum) {                          
+                                       _initializer(std::move(resolve_init(init))), _act_func(act_enum) {                          
     if (_initializer) { // allow nullptr
         _initializer->initialize(_weights, _input_dim, _output_dim);
         std::fill(_biases.data(View::NT).begin(), _biases.data(View::NT).end(), static_cast<fp32>(0.0f));

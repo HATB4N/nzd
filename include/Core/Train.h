@@ -20,9 +20,8 @@ private:
     std::unique_ptr<Model> _model;
     uint64_t _total_data;
     const uint64_t _epochs;
-    uint64_t _batches_per_epoch;
     const uint64_t _nol;
-    uint64_t _batch_size;
+    const uint64_t _batch_size;
     uint64_t _input_dim;
     const uint64_t _output_dim;
     const uint64_t _hidden_dim;
