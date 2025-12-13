@@ -10,12 +10,10 @@ class DenseLayer;
 
 class SGD : public IOptimizer {
 public:
-    SGD(std::vector<std::unique_ptr<DenseLayer>>& layers, fp32 learning_rate = 0.01f);
-    
-    void step() override;
-
+    explicit SGD();
+    void init() { return; }
 private:
-    fp32 _lr;
+
 };
 
 #endif

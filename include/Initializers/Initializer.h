@@ -11,6 +11,6 @@ enum class InitType : uint8_t {
 
 using InitFunc = std::shared_ptr<IWeightInitializer>;
 
-InitFunc resolve_init(InitType f);
+InitFunc resolve_init(InitType f, uint32_t seed = 1);
 
 #endif

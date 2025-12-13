@@ -9,13 +9,12 @@ class DenseLayer;
 
 class IOptimizer {
 public:
-    IOptimizer(std::vector<std::unique_ptr<DenseLayer>>& layers) : _layers(layers) {}
+    IOptimizer() = default;
     virtual ~IOptimizer() = default;
 
-    virtual void step() = 0;
+    virtual void init() = 0;
 
 protected:
-    std::vector<std::unique_ptr<DenseLayer>>& _layers;
 };
 
 #endif // IOPTIMIZER_H
