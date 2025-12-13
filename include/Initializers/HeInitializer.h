@@ -1,7 +1,7 @@
 #ifndef HEINITIALIZER_H
 #define HEINITIALIZER_H
 
-#include "IWeightInitializer.h"
+#include "Initializers/IWeightInitializer.h"
 #include <random>
 #include <cmath>
 #include <cassert>

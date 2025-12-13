@@ -1,5 +1,5 @@
-#include "DenseLayer.h"
-#include "Activation.h"
+#include "Core/DenseLayer.h"
+#include "Utils/Activation.h"
 #include <algorithm>
 #include <iostream>
 #include "Common/Gemm.h"

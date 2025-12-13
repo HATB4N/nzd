@@ -1,14 +1,15 @@
 #include <iostream>
-#include "Train.h"
+#include "Core/Train.h"
 
 void machine();
 
 int main() {
     machine();
-    Train train(50,
+    Train train(30, // epoches
                 128, // batch size
+                3, // hidden layer num
                 10, // output dim
-                128); // hidden dim
+                64); // hidden dim
     if(train.init()) exit(-1);
     train.train();
 

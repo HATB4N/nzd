@@ -1,7 +1,7 @@
 #ifndef DENSELAYER_H
 #define DENSELAYER_H
 
-#include "Activation.h"
+#include "Utils/Activation.h"
 #include "Common/Struct.h"
 #include "Common/Types.h"
 #include "Initializers/IWeightInitializer.h"

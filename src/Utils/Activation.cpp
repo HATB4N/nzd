@@ -1,4 +1,4 @@
-#include "Activation.h"
+#include "Utils/Activation.h"
 #include <cassert>
 #include <algorithm>
 #include <cmath>
@@ -94,7 +94,7 @@ void ActDifr::difr_relu(Matrix_T<fp32> &m1) {
 void ActDifr::difr_l_relu(Matrix_T<fp32> &m1) {
     for(size_t i = 0; i< m1.size(); ++i) {
         auto t = m1.data(View::T)[i]; 
-        m1.data(View::T)[i] = (t> 0) ? 0.01f : 1.0f;
+        m1.data(View::T)[i] = (t> 0) ? 1.0f : 0.01f;
     }
 }
 

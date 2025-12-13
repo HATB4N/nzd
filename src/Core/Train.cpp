@@ -1,5 +1,5 @@
-#include "Train.h"
-#include "Activation.h"
+#include "Core/Train.h"
+#include "Utils/Activation.h"
 #include <iostream>
 #include <limits>
 #include <algorithm>
@@ -11,9 +11,11 @@
 // 일단 mnist모듈이랑 합쳐둠. 나중에 load는 따로 설정하게
 Train::Train(uint64_t epochs,
              uint64_t bpe, // 구조체로 hyper parms & config 설정해서 RW하게
+             uint64_t nol,
              uint64_t output_dim, // 얘도 읽어오게
              uint64_t hidden_dim) : _epochs(epochs),
                                     _batches_per_epoch(bpe), 
+                                    _nol(nol),
                                     _model(std::make_unique<Model>()),
                                     _output_dim(output_dim),
                                     _hidden_dim(hidden_dim) {}
@@ -27,7 +29,7 @@ int Train::init() {
     // -----LOAD MNIST END----- //
     this->_input_dim = static_cast<uint64_t>(_mnist->get_rows() * _mnist->get_cols());
     this->_total_data = static_cast<uint64_t>(_mnist->get_total());
-    if (_model->init(10, _input_dim, _output_dim, _hidden_dim, _batches_per_epoch)) return -1;
+    if (_model->init(_nol, _input_dim, _output_dim, _hidden_dim, _batches_per_epoch)) return -1;
     _data_indices.resize(_total_data);
     std::iota(_data_indices.begin(), _data_indices.end(), 0);
     return 0;
@@ -44,7 +46,7 @@ void Train::train() {
         std::cout << "[Epoches " << i + 1 << " / " << _epochs << "] started.\n";
         train_one_epoch();
     }
-    _model->save_parms();
+    // _model->save_parms();
     this->test();
 }
 

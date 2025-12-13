@@ -1,7 +1,7 @@
 #ifndef TRAIN_H
 #define TRAIN_H
 
-#include "Model.h"
+#include "Core/Model.h"
 #include "Utils/Mnist.h"
 #include <vector>
 
@@ -9,6 +9,7 @@ class Train {
 public:
     Train(uint64_t epochs,
           uint64_t bpe,
+          uint64_t nol,
           uint64_t output_dim,
           uint64_t hidden_dim);
     void train();
@@ -20,6 +21,7 @@ private:
     uint64_t _total_data;
     const uint64_t _epochs;
     uint64_t _batches_per_epoch;
+    const uint64_t _nol;
     uint64_t _batch_size;
     uint64_t _input_dim;
     const uint64_t _output_dim;

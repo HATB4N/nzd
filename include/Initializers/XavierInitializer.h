@@ -1,7 +1,7 @@
 #ifndef XAVIERINITIALIZER_H
 #define XAVIERINITIALIZER_H
 
-#include "IWeightInitializer.h"
+#include "Initializers/IWeightInitializer.h"
 #include <random>
 #include <cmath>
 #include <cassert>

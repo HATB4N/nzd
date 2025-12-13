@@ -1,7 +1,7 @@
 #ifndef MODEL_H
 #define MODEL_H
 
-#include "DenseLayer.h"
+#include "Core/DenseLayer.h"
 #include <string>
 #include <vector>
 #include <fstream>

@@ -1,8 +1,8 @@
-#include "Model.h"
-#include "Activation.h"
+#include "Core/Model.h"
 #include "Initializers/HeInitializer.h"
+#include "Initializers/XavierInitializer.h"
 #include <stdexcept>
-#include "Activation.h" // enum매칭해?
+#include "Utils/Activation.h" // enum매칭해?
 #include "Common/Struct.h"
 
 Model::Model() {}
@@ -18,33 +18,24 @@ int Model::init(uint64_t num_of_layers, // denselayer 기준
     _hidden_dim =hidden_dim;
     _batch_size =batch_size;
     unsigned int t = 14;
-    auto he = std::make_shared<HeInitializer>(1); // seed injectin req
-
+    auto init = std::make_shared<HeInitializer>(1); // seed injectin req
     uint64_t last_dim = _input_dim;
-    // index = 0 | input layer | linear
-    _layers.push_back(
-        std::make_unique<DenseLayer>(ActFunc::LINEAR, 
-                                     last_dim, 
-                                     _hidden_dim, 
-                                     he, 
-                                     _layers.size()));
-
-    // index = (1, _nol) | hidden layer | act
+    // index = (0, _nol-1) | hidden layer | act
     for (uint64_t i = 0; i< _nol; i++) {
-        last_dim = _hidden_dim;
         _layers.push_back(
-        std::make_unique<DenseLayer>(ActFunc::RELU, 
-                                     last_dim, 
-                                     _hidden_dim, 
-                                     he, 
-                                     _layers.size()));
+            std::make_unique<DenseLayer>(ActFunc::RELU, 
+                                        last_dim, 
+                                        _hidden_dim, 
+                                        init, 
+                                        _layers.size()));
+        last_dim = _hidden_dim;
         }
 
     _layers.push_back(
         std::make_unique<DenseLayer>(ActFunc::SOFTMAX,
                                      last_dim, 
                                      _output_dim, 
-                                     he, 
+                                     init, 
                                      _layers.size()));
     
     return 0; // add error accumulation (ret+=...)
