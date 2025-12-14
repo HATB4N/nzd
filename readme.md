@@ -27,7 +27,7 @@ C++20 based deep learning framework(not really)
 - [ ] 설정 / 최적화 / 실행 플레인 분리
 - [ ] 하드웨어 의존성 최적화 구현
 
-## 빌드 및 실행 (Build and Run)
+## 빌드 & 실행
 ### 요구 사항
 * idk
 
@@ -42,5 +42,5 @@ make
 ```
 
 ## 대충 있어보이는 크레딧
-* 프로젝트 이름 제안: [@zenisa1](https://github.com/zenisa1)
+* 프로젝트 이름 지은 사람: [@zenisa1](https://github.com/zenisa1)
 * References: [references](./notes/references.md)

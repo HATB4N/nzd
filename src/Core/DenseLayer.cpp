@@ -1,28 +1,34 @@
 #include "Core/DenseLayer.h"
 #include "Utils/Activation.h"
+#include "Common/Gemm.h"
 #include <algorithm>
 #include <iostream>
-#include "Common/Gemm.h"
+#include <stdexcept>
 
-DenseLayer::DenseLayer(ActType act_type,
-                       uint64_t input_dim, 
+DenseLayer::DenseLayer(uint64_t input_dim, 
                        uint64_t output_dim, 
+                       ActType act_type,
                        InitType init,
                        OptType opt,
                        uint64_t idx) : _idx(idx),
-                                       _input_dim(input_dim), _output_dim(output_dim),
-                                       _weights(input_dim, output_dim), _biases(1, output_dim), 
-                                       _grad_weights(input_dim, output_dim), _grad_biases(1, output_dim),
-                                       _x_cache(0, 0), _z_cache(0, 0), // req reassign @ FW
-                                       _act(resolve_act(act_type)), _act_difr(resolve_act_difr(act_type)),
+                                       _input_dim(input_dim), 
+                                       _output_dim(output_dim),
+                                       _weights(input_dim, output_dim), 
+                                       _biases(1, output_dim), 
+                                       _grad_weights(input_dim, output_dim), 
+                                       _grad_biases(1, output_dim),
+                                       _x_cache(0, 0), 
+                                       _z_cache(0, 0),
+                                       _act(resolve_act(act_type)), 
+                                       _act_difr(resolve_act_difr(act_type)),
                                        _initializer(std::move(resolve_init(init))), 
                                        _optimizer(resolve_opt(opt, _weights, _biases, _grad_weights, _grad_biases)),
-                                       _act_type(act_type) {                          
+                                       _act_type(act_type) {   
+    if(!_optimizer) throw std::invalid_argument("Failed to init denselayer: Invalid optimizer type"); // 대충 빌드 시점에 검증 다 끝내기
     if (_initializer) { // allow nullptr
         _initializer->initialize(_weights, _input_dim, _output_dim);
         std::fill(_biases.data(View::NT).begin(), _biases.data(View::NT).end(), static_cast<fp32>(0.0f));
     }
-    // if(!_optimizer) throw ... (nullptr exxception? idk)
     _runner = _bw_table[_act_type == ActType::SOFTMAX];
 }
 
@@ -73,12 +79,5 @@ void DenseLayer::_accum_bias_grad(const Matrix_T<fp32>& dZ) {
             gb[j] = s;
         }
     }
-
-std::vector<Parameter> DenseLayer::get_parameters() {
-    return {
-        { &_weights, &_grad_weights, "weights" },
-        { &_biases,  &_grad_biases,  "biases"  }
-    };
-}
 
     

@@ -8,7 +8,7 @@
 
 enum class OptType : uint8_t {
     SGD,
-    ADAM
+    ADAM,
 };
 
 using OptFunc = std::unique_ptr<IOptimizer>;

@@ -13,6 +13,6 @@ OptFunc resolve_opt(OptType f,
         case OptType::ADAM:
             return std::make_unique<Adam>(W, b, dW, db);
         default:
-            return nullptr;
+            return nullptr; // fallback -> req nullptr exception (should I?)
     }
 }

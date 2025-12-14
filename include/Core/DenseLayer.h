@@ -12,9 +12,9 @@
 
 class DenseLayer : public ILayer {
 public:
-    DenseLayer(ActType act_type,
-               uint64_t input_dim, 
+    DenseLayer(uint64_t input_dim, 
                uint64_t output_dim, 
+               ActType act_type,
                InitType init,
                OptType opt,
                uint64_t idx);
@@ -23,7 +23,6 @@ public:
     // ILayer interface implementation
     void forward(const Matrix_T<fp32> &X, Matrix_T<fp32> &Z) override;
     void backward(Matrix_T<fp32>& dR, Matrix_T<fp32>& dX) override;
-    std::vector<Parameter> get_parameters() override;
     uint64_t get_in_dim() const override { return this->_input_dim; }
     uint64_t get_out_dim() const override { return this->_output_dim; }
 

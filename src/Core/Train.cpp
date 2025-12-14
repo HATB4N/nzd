@@ -26,7 +26,7 @@ int Train::init() {
     std::string file = "dataset/train-images.idx3-ubyte";
     std::string label = "dataset/train-labels.idx1-ubyte";
     _mnist = std::make_unique<Mnist>(); // 범용 말고 일단 mnist로
-    if (_mnist->init(file, label)) return -1;
+    if (_mnist->init(file, label)) return -1; // throw구조로 변경할 것.
     // -----LOAD MNIST END----- //
 
     this->_input_dim = static_cast<uint64_t>(_mnist->get_rows() * _mnist->get_cols());

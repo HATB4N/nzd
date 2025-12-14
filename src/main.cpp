@@ -10,7 +10,12 @@ int main() {
                 3, // hidden layer num
                 10, // output dim
                 64); // hidden dim
-    if(train.init()) exit(-1);
+    try {
+        train.init();
+    } catch(const std::exception& e) {
+        std::cout << e.what() << std::endl;
+        return -1;
+    }
     train.train();
 
     return 0;
