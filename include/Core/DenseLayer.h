@@ -12,7 +12,7 @@
 
 class DenseLayer {
 public:
-    DenseLayer(ActFunc act_enum,
+    DenseLayer(ActType act_type,
                uint64_t input_dim, 
                uint64_t output_dim, 
                InitType init,
@@ -31,7 +31,7 @@ public:
     Matrix_T<fp32>& get_grad_bias() { return this->_grad_biases; }
     void set_weight(const Matrix_T<fp32>& new_weights) { this->_weights = new_weights; }
     void set_bias(const Matrix_T<fp32>& new_biases) { this->_biases = new_biases; }
-    ActFunc get_act_type() { return this->_act_func; }
+    ActType get_act_type() { return this->_act_type; }
     
 private:
     const uint64_t _idx;
@@ -47,9 +47,9 @@ private:
     Matrix_T<fp32> _x_cache;
     Matrix_T<fp32> _z_cache;
 
-    ActFunc _act_func;
-    void (*_act)(Matrix_T<fp32> &);
-    void (*_act_difr)(Matrix_T<fp32> &);
+    ActType _act_type;
+    ActFunc _act;
+    ActFunc _act_difr;
     InitFunc _initializer;
     OptFunc _optimizer;
 

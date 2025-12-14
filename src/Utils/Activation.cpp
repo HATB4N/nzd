@@ -4,7 +4,7 @@
 #include <cmath>
 #include <vector>
 
-constexpr ActFn ACT_TABLE[] = {
+constexpr ActFunc ACT_TABLE[] = {
     &Act::linear,
     &Act::softmax,
     &Act::sigmoid,
@@ -13,7 +13,7 @@ constexpr ActFn ACT_TABLE[] = {
     &Act::l_relu
 };
 
-constexpr ActFn ACT_DIFR_TABLE[] = {
+constexpr ActFunc ACT_DIFR_TABLE[] = {
     &ActDifr::difr_linear,
     &ActDifr::difr_softmax,
     &ActDifr::difr_sigmoid,
@@ -22,11 +22,11 @@ constexpr ActFn ACT_DIFR_TABLE[] = {
     &ActDifr::difr_l_relu
 };
 
-ActFn resolve_act(ActFunc f) {
+ActFunc resolve_act(ActType f) {
     return ACT_TABLE[static_cast<uint8_t>(f)];
 }
 
-ActFn resolve_act_difr(ActFunc f) {
+ActFunc resolve_act_difr(ActType f) {
     return ACT_DIFR_TABLE[static_cast<uint8_t>(f)];
 }
 

@@ -15,7 +15,7 @@ public:
           uint64_t batch_size,
           InitType init,
           OptType opt);
-    void add(uint64_t dim, ActFunc act);
+    void add(uint64_t dim, ActType act);
     Matrix_T<fp32> forward_batch(const Matrix_T<fp32>& x);
     Matrix_T<fp32> backward_batch(const Matrix_T<fp32>& y);
     void apply_softmax_cross_entropy_backward(Matrix_T<fp32>& dx, const std::vector<uint8_t>& labels);

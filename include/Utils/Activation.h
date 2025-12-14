@@ -6,7 +6,7 @@
 #include <vector>
 #include <cstddef>
 
-enum class ActFunc : uint8_t {
+enum class ActType : uint8_t {
     LINEAR,
     SOFTMAX,
     SIGMOID,
@@ -33,9 +33,9 @@ namespace ActDifr {
     void difr_l_relu(Matrix_T<fp32> &m1);
 };
 
-using ActFn = void(*)(Matrix_T<fp32>&);
+using ActFunc = void(*)(Matrix_T<fp32>&);
 
-ActFn resolve_act(ActFunc);
-ActFn resolve_act_difr(ActFunc);
+ActFunc resolve_act(ActType);
+ActFunc resolve_act_difr(ActType);
 
 #endif // ACTIVATION_H

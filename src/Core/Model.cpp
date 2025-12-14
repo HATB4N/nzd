@@ -13,7 +13,7 @@ Model::Model(uint64_t input_dim,
     _last_dim = _input_dim;
 }
     
-void Model::add(uint64_t dim, ActFunc act) {
+void Model::add(uint64_t dim, ActType act) {
     _layers.push_back(
         std::make_unique<DenseLayer>(act,
                                      _last_dim, 

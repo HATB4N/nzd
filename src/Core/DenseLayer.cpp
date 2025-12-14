@@ -4,7 +4,7 @@
 #include <iostream>
 #include "Common/Gemm.h"
 
-DenseLayer::DenseLayer(ActFunc act_enum,
+DenseLayer::DenseLayer(ActType act_type,
                        uint64_t input_dim, 
                        uint64_t output_dim, 
                        InitType init,
@@ -14,16 +14,16 @@ DenseLayer::DenseLayer(ActFunc act_enum,
                                        _weights(input_dim, output_dim), _biases(1, output_dim), 
                                        _grad_weights(input_dim, output_dim), _grad_biases(1, output_dim),
                                        _x_cache(0, 0), _z_cache(0, 0), // req reassign @ FW
-                                       _act(resolve_act(act_enum)), _act_difr(resolve_act_difr(act_enum)),
+                                       _act(resolve_act(act_type)), _act_difr(resolve_act_difr(act_type)),
                                        _initializer(std::move(resolve_init(init))), 
                                        _optimizer(resolve_opt(opt, _weights, _biases, _grad_weights, _grad_biases)),
-                                       _act_func(act_enum) {                          
+                                       _act_type(act_type) {                          
     if (_initializer) { // allow nullptr
         _initializer->initialize(_weights, _input_dim, _output_dim);
         std::fill(_biases.data(View::NT).begin(), _biases.data(View::NT).end(), static_cast<fp32>(0.0f));
     }
     // if(!_optimizer) throw ... (nullptr exxception? idk)
-    _runner = _bw_table[_act_func == ActFunc::SOFTMAX];
+    _runner = _bw_table[_act_type == ActType::SOFTMAX];
 }
 
 void DenseLayer::forward(const Matrix_T<fp32> &x, Matrix_T<fp32> &z) {

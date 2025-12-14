@@ -34,9 +34,9 @@ int Train::init() {
 
     _model = std::make_unique<Model>(_input_dim, _batch_size, InitType::HE, OptType::SGD);
     for(uint64_t i = 0; i< _nol; i++) {
-        _model->add(_hidden_dim, ActFunc::RELU);
+        _model->add(_hidden_dim, ActType::RELU);
     }
-    _model->add(_output_dim, ActFunc::SOFTMAX);
+    _model->add(_output_dim, ActType::SOFTMAX);
 
     _data_indices.resize(_total_data);
     std::iota(_data_indices.begin(), _data_indices.end(), 0);
