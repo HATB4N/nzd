@@ -26,12 +26,12 @@ DenseLayer::DenseLayer(ActType act_type,
     _runner = _bw_table[_act_type == ActType::SOFTMAX];
 }
 
-void DenseLayer::forward(const Matrix_T<fp32> &x, Matrix_T<fp32> &z) {
-    _x_cache = x;
-    gemm().multiply(z, x, _weights);
-    gemm().add_bias<fp32, fp32>(z, _biases);
-    _z_cache = z; // 용량 고려하면 backward시 x->r 계산 fallback도 고려
-    _act(z);
+void DenseLayer::forward(const Matrix_T<fp32> &X, Matrix_T<fp32> &Z) {
+    _x_cache = X;
+    gemm().multiply(Z, X, _weights);
+    gemm().add_bias<fp32, fp32>(Z, _biases);
+    _z_cache = Z; // 용량 고려하면 backward시 x->r 계산 fallback도 고려
+    _act(Z);
 }
 
 void DenseLayer::backward(Matrix_T<fp32>& dR, Matrix_T<fp32>& dX) {
@@ -61,18 +61,24 @@ void DenseLayer::_compute_gradients(Matrix_T<fp32>& dZ, Matrix_T<fp32>& dX) {
 void DenseLayer::_accum_bias_grad(const Matrix_T<fp32>& dZ) {
     auto& gb = _grad_biases.data(View::NT);
     const auto& dz = dZ.data(View::NT);
-
     const size_t B = dZ.row();
     const size_t O = dZ.col();
-
     std::fill(gb.begin(), gb.end(), 0.0f);
-
-    for (size_t j = 0; j < O; ++j) {
-        fp32 s = 0;
-        #pragma omp simd reduction(+:s)
-        for (size_t i = 0; i < B; ++i) {
-            s += dz[i * O + j];
+        for (size_t j = 0; j < O; ++j) {
+            fp32 s = 0;
+            #pragma omp simd reduction(+:s)
+            for (size_t i = 0; i < B; ++i) {
+                s += dz[i * O + j];
+            }
+            gb[j] = s;
         }
-        gb[j] = s;
     }
+
+std::vector<Parameter> DenseLayer::get_parameters() {
+    return {
+        { &_weights, &_grad_weights, "weights" },
+        { &_biases,  &_grad_biases,  "biases"  }
+    };
 }
+
+    

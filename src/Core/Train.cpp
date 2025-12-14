@@ -54,7 +54,7 @@ void Train::train() {
         std::cout << "[Epoches " << i + 1 << " / " << _epochs << "] started.\n";
         train_one_epoch();
     }
-    _model->save_parms();
+    //_model->save_parms();
     this->test();
 }
 

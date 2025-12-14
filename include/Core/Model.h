@@ -23,11 +23,6 @@ public:
     int load_parms(); // @ ModelIO.cpp
 
 private:
-    uint64_t _nol;
-    // _nol: only count hidden layers (ignore static components)
-    // 0: input layer
-    // 1, 2, ..., _nol: hidden layer
-    // _nol+1: output layer
     std::vector<std::unique_ptr<DenseLayer>> _layers;
     InitType _init;
     OptType _opt;

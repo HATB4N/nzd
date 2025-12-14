@@ -7,7 +7,7 @@
 #include <cstddef>
 
 enum class ActType : uint8_t {
-    LINEAR,
+    IDENTITY,
     SOFTMAX,
     SIGMOID,
     SILU,
@@ -16,7 +16,7 @@ enum class ActType : uint8_t {
 };
 
 namespace Act {
-    void inline linear(Matrix_T<fp32> &m1) { return; } // fix
+    void inline identity(Matrix_T<fp32> &m1) { return; } // fix
     void softmax(Matrix_T<fp32> &m1);
     void sigmoid(Matrix_T<fp32> &m1);
     void silu(Matrix_T<fp32> &m1);
@@ -25,7 +25,7 @@ namespace Act {
 };
 
 namespace ActDifr {
-    void difr_linear(Matrix_T<fp32> &m1);
+    void difr_identity(Matrix_T<fp32> &m1);
     void difr_softmax(Matrix_T<fp32> &m1);
     void difr_sigmoid(Matrix_T<fp32> &m1);
     void difr_silu(Matrix_T<fp32> &m1);

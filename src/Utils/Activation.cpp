@@ -5,7 +5,7 @@
 #include <vector>
 
 constexpr ActFunc ACT_TABLE[] = {
-    &Act::linear,
+    &Act::identity,
     &Act::softmax,
     &Act::sigmoid,
     &Act::silu,
@@ -14,7 +14,7 @@ constexpr ActFunc ACT_TABLE[] = {
 };
 
 constexpr ActFunc ACT_DIFR_TABLE[] = {
-    &ActDifr::difr_linear,
+    &ActDifr::difr_identity,
     &ActDifr::difr_softmax,
     &ActDifr::difr_sigmoid,
     &ActDifr::difr_silu,
@@ -75,7 +75,7 @@ void Act::silu(Matrix_T<fp32> &m1) {
     return;
 }
 
-void ActDifr::difr_linear(Matrix_T<fp32> &m1) {
+void ActDifr::difr_identity(Matrix_T<fp32> &m1) {
     for(size_t i = 0; i< m1.size(); ++i) {
         m1.data(View::T)[i] = (fp32)1.0f;
     }    
