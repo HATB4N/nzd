@@ -58,6 +58,91 @@ void Train::train() {
     this->test();
 }
 
+
+void Train::train_one_epoch() {
+    uint64_t iter = _total_data / _batch_size;
+    _current_idx = 0;
+
+    for (uint64_t i = 0; i < iter; i++) {
+        // -----LOAD DATASET BEGIN----- //
+        Matrix_T<fp32> y = this->_get_label_batch_onehot();
+        Matrix_T<fp32> x = this->_load_dataset();
+        // -----LOAD DATASET END----- //
+
+        // -----FORWARD 1 PASS BEGIN----- //
+        Matrix_T<fp32> logits = _model->forward_batch(x);
+        // -----FORWARD 1 PASS END ----- //
+
+        // dbg
+        if (i == 0)
+        {
+            double total_loss = 0.0;
+            const size_t BATCH_SIZE = logits.row();
+            const size_t OUT_DIM = logits.col();
+            
+            const auto& pred_data = logits.data(View::NT);
+            const auto& label_data = y.data(View::NT);
+            const float epsilon = 1e-7f;
+
+            for (size_t k = 0; k < BATCH_SIZE * OUT_DIM; ++k) {
+                if (label_data[k] > 0.9f) {
+                    total_loss += -std::log(pred_data[k] + epsilon);
+                }
+            }
+            
+            std::cout << "Batch Loss: " << (total_loss / BATCH_SIZE) << std::endl;
+        }
+
+        // -----BADKWARD 1 PASS BEGIN----- //
+        gemm().sub<fp32, fp32>(logits, y); // ome-hot encoding
+        Matrix_T<fp32> dx = _model->backward_batch(logits);
+        // -----BADKWARD 1 PASS END----- //
+        
+        _current_idx += _batch_size;
+    }
+}
+
+Matrix_T<fp32> Train::_get_label_batch_onehot() {
+    // Batch normalization고려해서 안 나눠떨어지는 건 버리는 방향으로 진행함.
+    if (_batch_size == 0) {
+        return Matrix_T<fp32>(0, 0);
+    }
+
+    Matrix_T<fp32> y(_batch_size, _output_dim);
+    auto& y_data = y.data(View::NT);
+    std::fill(y_data.begin(), y_data.end(), 0.0f);
+
+    #pragma omp parallel for
+    for (uint64_t i = 0; i < _batch_size; ++i) {
+        uint64_t data_index = _data_indices[_current_idx + i];
+        uint8_t label = _mnist->get_label(data_index);
+        y_data[i * _output_dim + label] = 1.0f;
+    }
+    return y;
+}
+
+Matrix_T<fp32> Train::_load_dataset() {
+    if (_batch_size == 0) {
+        return Matrix_T<fp32>(0, 0);
+    }
+
+    Matrix_T<fp32> x(_batch_size, _input_dim);
+    auto& x_data = x.data(View::NT);
+
+    #pragma omp parallel for
+    for (uint64_t i = 0; i < _batch_size; ++i) {
+        uint64_t data_index = _data_indices[_current_idx + i];
+        auto image_span = _mnist->get_image(data_index);
+        
+        fp32* dst_ptr = &x_data[i * _input_dim];
+        for (size_t p = 0; p < _input_dim; ++p) {
+            dst_ptr[p] = static_cast<fp32>(image_span[p] / 255.0f);
+        }
+    }
+    return x;
+}
+
+
 void Train::test() {
     auto test_mnist = std::make_unique<Mnist>();
     std::string test_file = "dataset/t10k-images.idx3-ubyte";
@@ -139,86 +224,4 @@ void Train::test() {
     std::cout << "Average Loss: " << avg_loss << std::endl;
     std::cout << "Accuracy: " << accuracy * 100.0 << " %" << std::endl;
     std::cout << "------------------------\n";
-}
-
-void Train::train_one_epoch() {
-    uint64_t iter = _total_data / _batch_size;
-    _current_idx = 0;
-
-    for (uint64_t i = 0; i < iter; i++) {
-        // -----LOAD DATASET BEGIN----- //
-        Matrix_T<fp32> y = this->_get_label_batch_onehot();
-        Matrix_T<fp32> x = this->_load_dataset();
-        // -----LOAD DATASET END----- //
-
-        // -----FORWARD 1 PASS BEGIN----- //
-        Matrix_T<fp32> logits = _model->forward_batch(x);
-        // -----FORWARD 1 PASS END ----- //
-
-        // dbg
-        if (i == 0) {
-            double total_loss = 0.0;
-            const size_t BATCH_SIZE = logits.row();
-            const size_t OUT_DIM = logits.col();
-            
-            const auto& pred_data = logits.data(View::NT);
-            const auto& label_data = y.data(View::NT);
-            const float epsilon = 1e-7f;
-
-            for (size_t k = 0; k < BATCH_SIZE * OUT_DIM; ++k) {
-                if (label_data[k] > 0.9f) {
-                    total_loss += -std::log(pred_data[k] + epsilon);
-                }
-            }
-            
-            std::cout << "Batch Loss: " << (total_loss / BATCH_SIZE) << std::endl;
-        }
-
-        // -----BADKWARD 1 PASS BEGIN----- //
-        gemm().sub<fp32, fp32>(logits, y); // ome-hot encoding
-        Matrix_T<fp32> dx = _model->backward_batch(logits);
-        // -----BADKWARD 1 PASS END----- //
-        
-        _current_idx += _batch_size;
-    }
-}
-
-Matrix_T<fp32> Train::_get_label_batch_onehot() {
-    // Batch normalization고려해서 안 나눠떨어지는 건 버리는 방향으로 진행함.
-    if (_batch_size == 0) {
-        return Matrix_T<fp32>(0, 0);
-    }
-
-    Matrix_T<fp32> y(_batch_size, _output_dim);
-    auto& y_data = y.data(View::NT);
-    std::fill(y_data.begin(), y_data.end(), 0.0f);
-
-    #pragma omp parallel for
-    for (uint64_t i = 0; i < _batch_size; ++i) {
-        uint64_t data_index = _data_indices[_current_idx + i];
-        uint8_t label = _mnist->get_label(data_index);
-        y_data[i * _output_dim + label] = 1.0f;
-    }
-    return y;
-}
-
-Matrix_T<fp32> Train::_load_dataset() {
-    if (_batch_size == 0) {
-        return Matrix_T<fp32>(0, 0);
-    }
-
-    Matrix_T<fp32> x(_batch_size, _input_dim);
-    auto& x_data = x.data(View::NT);
-
-    #pragma omp parallel for
-    for (uint64_t i = 0; i < _batch_size; ++i) {
-        uint64_t data_index = _data_indices[_current_idx + i];
-        auto image_span = _mnist->get_image(data_index);
-        
-        fp32* dst_ptr = &x_data[i * _input_dim];
-        for (size_t p = 0; p < _input_dim; ++p) {
-            dst_ptr[p] = static_cast<fp32>(image_span[p] / 255.0f);
-        }
-    }
-    return x;
 }

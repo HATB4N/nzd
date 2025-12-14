@@ -1,12 +1,35 @@
 # NaZakDeep
+C++20 based deep learning framework(not really)
 
-## 뭐하는거?
-STL만 써서 신경망 만들기(cpp20 req)
+## 할 거
+### 1단계: 기본 신경망 검증
+- [x] Fully Connected (Dense) Layers
+- [x] Activation Functions(e.g. ReLU, Softmax)
+- [ ] Optimizers: SGD, Adam(WIP)
+- [ ] Loss Functions: Cross-Entropy(WIP)
+- [x] Weight Initializers: Xavier, He
+- [x] MNIST 데이터셋 학습 성공 (ref: [251213](./notes/memo/251213.md))
 
+### 2단계: 기능 확장 & 일반화(수립중)
+- [ ] **정규화 (Regularization)**
+    - [ ] Batch Normalization
+    - [ ] Dropout
+- [ ] **코어 아키텍처 리팩토링** (ref: [251213](./notes/memo/251213.md))
+    - [ ] 메모리 풀 (Memory Pool)
+    - [ ] 매트릭스 뷰 (Matrix View)
+    - [ ] 연산자 백엔드 추상화 (for AVX/NEON)
+- [ ] **레이어 추가(일반화 검증용)**
+    - [ ] Convolutional Layers
 
-## 사용
-### 기능
-- nothing
+### 3단계: 컴파일러 기반 최적화(수립중)
+- [ ] 그래프 기반 실행 엔진 구축
+- [ ] 그래프 최적화 컴파일러 구축
+- [ ] 설정 / 최적화 / 실행 플레인 분리
+- [ ] 하드웨어 의존성 최적화 구현
+
+## 빌드 및 실행 (Build and Run)
+### 요구 사항
+* idk
 
 ### 빌드
 ```sh
@@ -18,48 +41,6 @@ make
 ./NZD
 ```
 
-## 진행도
-0.352532% / 100%
-
-### 당장 할거
-- 과적합 관련
-- 수치 안정성
-
-### 한거
-- 일단 곱셈 되긴 함
-- 세이브 로드 일단은 됨
-- back propagation -> mnist 학습
-- mini batch
-```
-[Epoches 1 / 50] started.
-Batch Loss: 3.25548
-[Epoches 2 / 50] started.
-Batch Loss: 0.220378
-
-...
-
------ Test Results -----
-Average Loss: 0.115109
-Accuracy: 98.09 %
-------------------------
-```
-
-### 언젠간 할거
-- matrix 클래스의 thread 수명은 unique_ptr로 관리. 생성 오버헤드 줄이기 => Threadpool 구성함
-- operations를 unit화 후 graph engine만들고 dependencies에 맞게 펼쳐서 쓰레드 분배하기
-- 레이어도 인터페이스화
-
-#### 언젠간 할거 메모
-- control plane과 execution plane을 구분한다.
-- control plane에서는 추상화된 레이어만을 바라보며 유저의 설정에 따라 명령을 내린다.
-    - 실제 각 레이어에서는 type에 맞는 sequential execution plan을 구성한다.
-    - 중간 계층(ICompiler? Optimizer? idk)에서는 위에서 내려온 plan이 무엇이든 이에 대한 최적화를 진행하여 execution plane으로 내려보낸다. (내려오는게 affine -> activate -> ... backpropa. -> update형식이든, conv. -> relu -> pooling -> ...이든, QKV든 뭐든 공통된 형식으로 기술된 execution들에 대한 최적화만)
-- execution plane에서는 내려온 plan에 대한 실행을 담당한다. (나중에 aarch64, amd64구분해서 SIMD를 직접 쓰든 뭘 하든 여기서 동일 interface를 보장하는 여러 연산 모듈 중 필요한 걸 선택할수 있게)
-
-## 참고
-- (언젠가 무조건 바뀔)파라미터 저장 방식
-    - `[NZD(magicbyte)][metadata len][metadata(about how to read the data)]` 하나 넣고(레이어들에 대한 정보)
-    - `[metadata len][metadata][data]`단위를 하위 함수에서 순차적으로 write함(하나의 레이어에 대한 정보).
-
-## 진짜 참고
-- 프로젝트 이름 지어준 사람: [@zenisa1](https://github.com/zenisa1)
+## 대충 있어보이는 크레딧
+* 프로젝트 이름 제안: [@zenisa1](https://github.com/zenisa1)
+* References: [references](./notes/references.md)

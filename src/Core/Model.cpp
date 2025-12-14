@@ -7,9 +7,9 @@ Model::Model(uint64_t input_dim,
              uint64_t batch_size,
              InitType init,
              OptType opt) : _input_dim(input_dim),
-                             _batch_size(batch_size),
-                             _init(init),
-                             _opt(opt) {
+                            _batch_size(batch_size),
+                            _init(init),
+                            _opt(opt) {
     _last_dim = _input_dim;
 }
     

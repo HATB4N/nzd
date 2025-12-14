@@ -20,8 +20,8 @@ public:
                uint64_t idx); // 얘는 _layers에서의 index(physical id)임.
     ~DenseLayer() = default;
 
-    void forward(const Matrix_T<fp32> &x, Matrix_T<fp32> &r);
-    void backward(Matrix_T<fp32>& d_in, Matrix_T<fp32>& d_out);
+    void forward(const Matrix_T<fp32> &x, Matrix_T<fp32> &z);
+    void backward(Matrix_T<fp32>& dR, Matrix_T<fp32>& dX);
     void update();
     uint64_t get_in_dim() { return this->_input_dim ;};
     uint64_t get_out_dim() { return this->_output_dim; };
@@ -55,9 +55,9 @@ private:
 
     // runtime binding for backward one-hot-encoding exception
     using BwFunc = void (DenseLayer::*)(Matrix_T<fp32>&, Matrix_T<fp32>&);
-    void _bw_impl_standard(Matrix_T<fp32>& dR, Matrix_T<fp32>& dX);
-    void _bw_impl_bypass(Matrix_T<fp32>& dZ, Matrix_T<fp32>& dX);
-    void _compute_gradients(Matrix_T<fp32>& dZ, Matrix_T<fp32>& dX);
+    void _bw_impl_standard(Matrix_T<fp32>& dR, Matrix_T<fp32>& dX); // dR -> dZ
+    void _bw_impl_bypass(Matrix_T<fp32>& dZ, Matrix_T<fp32>& dX); // ignore above
+    void _compute_gradients(Matrix_T<fp32>& dZ, Matrix_T<fp32>& dX); // dZ -> set dW, db
     void _accum_bias_grad(const Matrix_T<fp32>& dZ);
     static constexpr BwFunc _bw_table[] = {
         &DenseLayer::_bw_impl_standard,

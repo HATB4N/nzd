@@ -22,16 +22,16 @@ DenseLayer::DenseLayer(ActFunc act_enum,
         _initializer->initialize(_weights, _input_dim, _output_dim);
         std::fill(_biases.data(View::NT).begin(), _biases.data(View::NT).end(), static_cast<fp32>(0.0f));
     }
-    // if(!_optimizer) throw ...
+    // if(!_optimizer) throw ... (nullptr exxception? idk)
     _runner = _bw_table[_act_func == ActFunc::SOFTMAX];
 }
 
-void DenseLayer::forward(const Matrix_T<fp32> &x, Matrix_T<fp32> &r) {
+void DenseLayer::forward(const Matrix_T<fp32> &x, Matrix_T<fp32> &z) {
     _x_cache = x;
-    gemm().multiply(r, x, _weights);
-    gemm().add_bias<fp32, fp32>(r, _biases);
-    _z_cache = r; // 용량 고려하면 gemm().multiply<fp32, fp32>(_z_cache, _x_cache, _weights);이 나을지도...
-    _act(r);
+    gemm().multiply(z, x, _weights);
+    gemm().add_bias<fp32, fp32>(z, _biases);
+    _z_cache = z; // 용량 고려하면 backward시 x->r 계산 fallback도 고려
+    _act(z);
 }
 
 void DenseLayer::backward(Matrix_T<fp32>& dR, Matrix_T<fp32>& dX) {
