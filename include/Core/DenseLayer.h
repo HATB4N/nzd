@@ -5,6 +5,7 @@
 #include "Common/Struct.h"
 #include "Common/Types.h"
 #include "Initializers/Initializer.h"
+#include "Optimizers/Optimizer.h"
 #include <memory>
 #include <vector>
 #include <cstdint>
@@ -15,6 +16,7 @@ public:
                uint64_t input_dim, 
                uint64_t output_dim, 
                InitType init,
+               OptType opt,
                uint64_t idx); // 얘는 _layers에서의 index(physical id)임.
     ~DenseLayer() = default;
 
@@ -49,6 +51,7 @@ private:
     void (*_act)(Matrix_T<fp32> &);
     void (*_act_difr)(Matrix_T<fp32> &);
     InitFunc _initializer;
+    OptFunc _optimizer;
 
     // runtime binding for backward one-hot-encoding exception
     using BwFunc = void (DenseLayer::*)(Matrix_T<fp32>&, Matrix_T<fp32>&);

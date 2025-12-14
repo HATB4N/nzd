@@ -1,5 +1,6 @@
 #include "Optimizers/Adam.h"
+// 미구현
 
-Adam::Adam() {
-    //
+void Adam::step() {
+
 }

@@ -8,6 +8,7 @@ DenseLayer::DenseLayer(ActFunc act_enum,
                        uint64_t input_dim, 
                        uint64_t output_dim, 
                        InitType init,
+                       OptType opt,
                        uint64_t idx) : _idx(idx),
                                        _input_dim(input_dim), _output_dim(output_dim),
                                        _weights(input_dim, output_dim), _biases(1, output_dim), 
@@ -15,14 +16,16 @@ DenseLayer::DenseLayer(ActFunc act_enum,
                                        _x_cache(0, 0), _z_cache(0, 0), // req reassign @ FW
                                        _act(resolve_act(act_enum)), _act_difr(resolve_act_difr(act_enum)),
                                        _initializer(std::move(resolve_init(init))), 
+                                       _optimizer(resolve_opt(opt, _weights, _biases, _grad_weights, _grad_biases)),
                                        _act_func(act_enum) {                          
     if (_initializer) { // allow nullptr
         _initializer->initialize(_weights, _input_dim, _output_dim);
         std::fill(_biases.data(View::NT).begin(), _biases.data(View::NT).end(), static_cast<fp32>(0.0f));
     }
+    // if(!_optimizer) throw ...
     _runner = _bw_table[_act_func == ActFunc::SOFTMAX];
 }
-// R = σ(XW+b), multiply(Y, X, W, View::T)
+
 void DenseLayer::forward(const Matrix_T<fp32> &x, Matrix_T<fp32> &r) {
     _x_cache = x;
     gemm().multiply(r, x, _weights);
@@ -31,28 +34,12 @@ void DenseLayer::forward(const Matrix_T<fp32> &x, Matrix_T<fp32> &r) {
     _act(r);
 }
 
-// multiply(dX, dY, W, View::NT)
 void DenseLayer::backward(Matrix_T<fp32>& dR, Matrix_T<fp32>& dX) {
     (this->*_runner)(dR, dX);
 }
 
-// W := W - lr
 void DenseLayer::update() {
-    const float lr = 0.001f;
-
-    auto& w_data = _weights.data(View::NT);
-    const auto& gw_data = _grad_weights.data(View::NT);
-    #pragma omp parallel for
-    for (size_t i = 0; i < w_data.size(); ++i) {
-        w_data[i] = static_cast<fp32>(static_cast<float>(w_data[i]) - lr * gw_data[i]);
-    }
-
-    auto& b_data = _biases.data(View::NT);
-    const auto& gb_data = _grad_biases.data(View::NT);
-    #pragma omp parallel for
-    for (size_t i = 0; i < b_data.size(); ++i) {
-        b_data[i] = static_cast<fp32>(static_cast<float>(b_data[i]) - lr * gb_data[i]);
-    }
+    _optimizer->step();
 }
 
 void DenseLayer::_bw_impl_standard(Matrix_T<fp32>& dR, Matrix_T<fp32>& dX) {

@@ -8,6 +8,7 @@
 #include <random>
 #include "Common/Gemm.h"
 #include "Initializers/Initializer.h"
+#include "Optimizers/Optimizer.h"
 
 // 일단 mnist모듈이랑 합쳐둠. 나중에 load는 따로 설정하게
 Train::Train(uint64_t epochs,
@@ -31,7 +32,7 @@ int Train::init() {
     this->_input_dim = static_cast<uint64_t>(_mnist->get_rows() * _mnist->get_cols());
     this->_total_data = static_cast<uint64_t>(_mnist->get_total());
 
-    _model = std::make_unique<Model>(_input_dim, _batch_size, InitType::HE);
+    _model = std::make_unique<Model>(_input_dim, _batch_size, InitType::HE, OptType::SGD);
     for(uint64_t i = 0; i< _nol; i++) {
         _model->add(_hidden_dim, ActFunc::RELU);
     }
@@ -53,7 +54,7 @@ void Train::train() {
         std::cout << "[Epoches " << i + 1 << " / " << _epochs << "] started.\n";
         train_one_epoch();
     }
-    // _model->save_parms();
+    _model->save_parms();
     this->test();
 }
 

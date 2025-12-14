@@ -6,6 +6,7 @@ static uint64_t read_uint64_t_big_endian(std::ifstream& fin);
 void write_uint64_t_big_endian(std::vector<uint8_t>& vec, uint64_t target);
 
 int Model::save_parms() {
+    std::cout << "start saving parms..." << std::endl;
     int ret = 0;
     std::ofstream _fout;
     _fout.open(this->base_dir, std::ios::binary);
@@ -28,6 +29,7 @@ int Model::save_parms() {
     }
     // ret에 대한 예외 처리. 날려버릴지, 저장 없이 할지 정해야 함. 로드는 그냥 종료시키고
     _fout.close();
+    std::cout << "save done" << std::endl;
     return ret;
 }
 
