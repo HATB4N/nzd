@@ -9,6 +9,7 @@
 #include "Common/Gemm.h"
 #include "Initializers/Initializer.h"
 #include "Optimizers/Optimizer.h"
+#include "LossFunc/CrossEntropy.h"
 
 // 일단 mnist모듈이랑 합쳐둠. 나중에 load는 따로 설정하게
 Train::Train(uint64_t epochs,
@@ -16,15 +17,17 @@ Train::Train(uint64_t epochs,
              uint64_t nol,
              uint64_t output_dim, // 얘도 읽어오게
              uint64_t hidden_dim) : _epochs(epochs),
-                                    _batch_size(batch_size), 
+                                    _batch_size(batch_size),
                                     _nol(nol),
                                     _output_dim(output_dim),
-                                    _hidden_dim(hidden_dim) {}
+                                    _hidden_dim(hidden_dim) {
+}
 
 int Train::init() {
     // -----LOAD MNIST BEGIN----- //
-    std::string file = "dataset/train-images.idx3-ubyte";
-    std::string label = "dataset/train-labels.idx1-ubyte";
+    std::string root_path = PROJECT_ROOT_DIR; // 전처리 박고 pwd shell로 뽑아서 지정하게 수정
+    std::string file = root_path + "dataset/train-images.idx3-ubyte";
+    std::string label = root_path + "dataset/train-labels.idx1-ubyte";
     _mnist = std::make_unique<Mnist>(); // 범용 말고 일단 mnist로
     if (_mnist->init(file, label)) return -1; // throw구조로 변경할 것.
     // -----LOAD MNIST END----- //
@@ -33,7 +36,7 @@ int Train::init() {
     this->_total_data = static_cast<uint64_t>(_mnist->get_total());
 
     _model = std::make_unique<Model>(_input_dim, _batch_size, InitType::HE, OptType::SGD);
-    for(uint64_t i = 0; i< _nol; i++) {
+    for (uint64_t i = 0; i < _nol; i++) {
         _model->add(_hidden_dim, ActType::RELU);
     }
     _model->add(_output_dim, ActType::SOFTMAX);
@@ -47,10 +50,10 @@ void Train::train() {
     std::random_device rd;
     std::mt19937 g(rd());
 
-    for(uint64_t i = 0; i < _epochs; i++) {
+    for (uint64_t i = 0; i < _epochs; i++) {
         // Shuffle data indices at the beginning of each epoch
         std::shuffle(_data_indices.begin(), _data_indices.end(), g);
-        
+
         std::cout << "[Epoches " << i + 1 << " / " << _epochs << "] started.\n";
         train_one_epoch();
     }
@@ -58,46 +61,22 @@ void Train::train() {
     this->test();
 }
 
-
 void Train::train_one_epoch() {
     uint64_t iter = _total_data / _batch_size;
     _current_idx = 0;
+    CrossEntropy c; // 일단임시. loss func type은 model이 가지고 있어야 하는 정보.
 
     for (uint64_t i = 0; i < iter; i++) {
-        // -----LOAD DATASET BEGIN----- //
         Matrix_T<fp32> y = this->_get_label_batch_onehot();
         Matrix_T<fp32> x = this->_load_dataset();
-        // -----LOAD DATASET END----- //
 
-        // -----FORWARD 1 PASS BEGIN----- //
         Matrix_T<fp32> logits = _model->forward_batch(x);
-        // -----FORWARD 1 PASS END ----- //
 
-        // dbg
-        if (i == 0)
-        {
-            double total_loss = 0.0;
-            const size_t BATCH_SIZE = logits.row();
-            const size_t OUT_DIM = logits.col();
-            
-            const auto& pred_data = logits.data(View::NT);
-            const auto& label_data = y.data(View::NT);
-            const float epsilon = 1e-7f;
+        if (i == 0) std::cout << "Batch Loss: " << c.calculate(logits, y) << std::endl; // req opt
 
-            for (size_t k = 0; k < BATCH_SIZE * OUT_DIM; ++k) {
-                if (label_data[k] > 0.9f) {
-                    total_loss += -std::log(pred_data[k] + epsilon);
-                }
-            }
-            
-            std::cout << "Batch Loss: " << (total_loss / BATCH_SIZE) << std::endl;
-        }
-
-        // -----BADKWARD 1 PASS BEGIN----- //
-        gemm().sub<fp32, fp32>(logits, y); // ome-hot encoding
+        gemm().sub<fp32, fp32>(logits, y); // one-hot encoding
         Matrix_T<fp32> dx = _model->backward_batch(logits);
-        // -----BADKWARD 1 PASS END----- //
-        
+
         _current_idx += _batch_size;
     }
 }
@@ -109,10 +88,10 @@ Matrix_T<fp32> Train::_get_label_batch_onehot() {
     }
 
     Matrix_T<fp32> y(_batch_size, _output_dim);
-    auto& y_data = y.data(View::NT);
+    auto &y_data = y.data(View::NT);
     std::fill(y_data.begin(), y_data.end(), 0.0f);
 
-    #pragma omp parallel for
+#pragma omp parallel for
     for (uint64_t i = 0; i < _batch_size; ++i) {
         uint64_t data_index = _data_indices[_current_idx + i];
         uint8_t label = _mnist->get_label(data_index);
@@ -127,14 +106,14 @@ Matrix_T<fp32> Train::_load_dataset() {
     }
 
     Matrix_T<fp32> x(_batch_size, _input_dim);
-    auto& x_data = x.data(View::NT);
+    auto &x_data = x.data(View::NT);
 
-    #pragma omp parallel for
+#pragma omp parallel for
     for (uint64_t i = 0; i < _batch_size; ++i) {
         uint64_t data_index = _data_indices[_current_idx + i];
         auto image_span = _mnist->get_image(data_index);
-        
-        fp32* dst_ptr = &x_data[i * _input_dim];
+
+        fp32 *dst_ptr = &x_data[i * _input_dim];
         for (size_t p = 0; p < _input_dim; ++p) {
             dst_ptr[p] = static_cast<fp32>(image_span[p] / 255.0f);
         }
@@ -142,11 +121,11 @@ Matrix_T<fp32> Train::_load_dataset() {
     return x;
 }
 
-
 void Train::test() {
     auto test_mnist = std::make_unique<Mnist>();
-    std::string test_file = "dataset/t10k-images.idx3-ubyte";
-    std::string test_label = "dataset/t10k-labels.idx1-ubyte";
+    std::string root_path = PROJECT_ROOT_DIR; // 전처리 박고 pwd shell로 뽑아서 지정하게 수정
+    std::string test_file = root_path + "dataset/t10k-images.idx3-ubyte";
+    std::string test_label = root_path + "dataset/t10k-labels.idx1-ubyte";
     if (test_mnist->init(test_file, test_label)) {
         std::cerr << "Error while loading test dataset" << std::endl;
         return;
@@ -158,19 +137,19 @@ void Train::test() {
 
     uint64_t test_current_idx = 0;
     uint64_t iter = (test_total_data + _batch_size - 1) / _batch_size;
-    
+
     double total_loss = 0.0;
     uint64_t correct_predictions = 0;
 
-    for (uint64_t i = 0; i <iter; i++) {
+    for (uint64_t i = 0; i < iter; i++) {
         uint64_t remaining_data = test_total_data > test_current_idx ? test_total_data - test_current_idx : 0;
-        uint64_t current_batch_size = std::min((uint64_t)_batch_size, remaining_data);
+        uint64_t current_batch_size = std::min((uint64_t) _batch_size, remaining_data);
 
         if (current_batch_size == 0) continue;
 
         // labels
         Matrix_T<fp32> y(current_batch_size, _output_dim);
-        auto& y_data = y.data(View::NT);
+        auto &y_data = y.data(View::NT);
         std::fill(y_data.begin(), y_data.end(), 0.0f);
         std::vector<uint8_t> true_labels;
         true_labels.resize(current_batch_size);
@@ -183,10 +162,10 @@ void Train::test() {
 
         // imgs
         Matrix_T<fp32> x(current_batch_size, test_input_dim);
-        auto& x_data = x.data(View::NT);
+        auto &x_data = x.data(View::NT);
         for (uint64_t j = 0; j < current_batch_size; ++j) {
             auto image_span = test_mnist->get_image(test_current_idx + j);
-            fp32* dst_ptr = &x_data[j * test_input_dim];
+            fp32 *dst_ptr = &x_data[j * test_input_dim];
             for (size_t p = 0; p < test_input_dim; ++p) {
                 dst_ptr[p] = static_cast<fp32>(image_span[p] / 255.0f);
             }
@@ -196,13 +175,13 @@ void Train::test() {
         Matrix_T<fp32> logits = _model->forward_batch(x);
 
         // score
-        const auto& pred_data = logits.data(View::NT);
+        const auto &pred_data = logits.data(View::NT);
         const float epsilon = 1e-7f;
 
         for (size_t j = 0; j < current_batch_size; ++j) {
             // loss
             if (true_labels[j] < _output_dim) {
-                 total_loss += -std::log(pred_data[j * _output_dim + true_labels[j]] + epsilon);
+                total_loss += -std::log(pred_data[j * _output_dim + true_labels[j]] + epsilon);
             }
 
             // acc
@@ -213,7 +192,7 @@ void Train::test() {
                 correct_predictions++;
             }
         }
-        
+
         test_current_idx += current_batch_size;
     }
 

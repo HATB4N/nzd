@@ -8,11 +8,11 @@
 #include "Common/Struct.h"
 #include <span>
 
-static uint32_t read_uint32_t_big_endian(std::ifstream& fin) {
+static uint32_t read_uint32_t_big_endian(std::ifstream &fin) {
     uint32_t value = 0;
-    for (uint32_t i = 0; i< sizeof(uint32_t); i++) {
+    for (uint32_t i = 0; i < sizeof(uint32_t); i++) {
         uint8_t byte;
-        fin.read(reinterpret_cast<char*>(&byte), sizeof(byte));
+        fin.read(reinterpret_cast<char *>(&byte), sizeof(byte));
         value = (value << 8) | byte;
     }
     return value;
@@ -36,7 +36,7 @@ public:
     std::vector<uint8_t> all_labels;
     std::vector<uint8_t> all_images;
 
-    int init(const std::string& f, const std::string& l) {
+    int init(const std::string &f, const std::string &l) {
         // init labels
         std::ifstream fin_label(l, std::ios::binary);
         if (!fin_label.is_open()) { return -1; }
@@ -44,7 +44,7 @@ public:
         if (label_magicbyte != 0x00000801) return -1;
         uint32_t total_labels = read_uint32_t_big_endian(fin_label);
         all_labels.resize(total_labels);
-        fin_label.read(reinterpret_cast<char*>(all_labels.data()), total_labels);
+        fin_label.read(reinterpret_cast<char *>(all_labels.data()), total_labels);
         fin_label.close();
 
         // init imgs
@@ -56,10 +56,10 @@ public:
         if (this->_total_imgs != total_labels) return -1;
         this->_rows = read_uint32_t_big_endian(fin_img);
         this->_cols = read_uint32_t_big_endian(fin_img);
-        
+
         uint64_t image_data_size = static_cast<uint64_t>(_total_imgs) * _rows * _cols;
         all_images.resize(image_data_size);
-        fin_img.read(reinterpret_cast<char*>(all_images.data()), image_data_size);
+        fin_img.read(reinterpret_cast<char *>(all_images.data()), image_data_size);
         fin_img.close();
 
         std::cout << "[MNIST]: init done, all data loaded into memory." << std::endl;

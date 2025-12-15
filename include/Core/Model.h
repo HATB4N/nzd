@@ -15,19 +15,22 @@ public:
           uint64_t batch_size,
           InitType init,
           OptType opt);
+
     void add(uint64_t dim, ActType act);
-    Matrix_T<fp32> forward_batch(const Matrix_T<fp32>& x);
-    Matrix_T<fp32> backward_batch(const Matrix_T<fp32>& y);
-    void apply_softmax_cross_entropy_backward(Matrix_T<fp32>& dx, const std::vector<uint8_t>& labels);
+
+    Matrix_T<fp32> forward_batch(const Matrix_T<fp32> &x);
+    Matrix_T<fp32> backward_batch(const Matrix_T<fp32> &y);
+
     int save_parms(); // @ ModelIO.cpp
     int load_parms(); // @ ModelIO.cpp
 
 private:
-    std::vector<std::unique_ptr<DenseLayer>> _layers;
+    std::vector<std::unique_ptr<DenseLayer> > _layers;
     InitType _init;
     OptType _opt;
-    int save_unit_parms(uint64_t index, std::ofstream& _fout); // @ ModelIO.cpp
-    int load_unit_parms(std::ifstream& _fin); // @ ModelIO.cpp
+
+    int save_unit_parms(uint64_t index, std::ofstream &_fout); // @ ModelIO.cpp
+    int load_unit_parms(std::ifstream &_fin); // @ ModelIO.cpp
     std::string base_dir = "data/parms.nzd"; // init시 초기화시켜
     uint64_t _batch_size;
     uint64_t _input_dim;

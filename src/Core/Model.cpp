@@ -12,27 +12,27 @@ Model::Model(uint64_t input_dim,
                             _opt(opt) {
     _last_dim = _input_dim;
 }
-    
+
 void Model::add(uint64_t dim, ActType act) {
     _layers.push_back(
-        std::make_unique<DenseLayer>(_last_dim, 
-                                    dim, 
-                                    act,
-                                    _init, 
-                                    _opt,
-                                    _layers.size()));
+        std::make_unique<DenseLayer>(_last_dim,
+                                     dim,
+                                     act,
+                                     _init,
+                                     _opt,
+                                     _layers.size()));
     _last_dim = dim;
 }
 
-Matrix_T<fp32> Model::forward_batch(const Matrix_T<fp32>& x) {
+Matrix_T<fp32> Model::forward_batch(const Matrix_T<fp32> &x) {
     const uint64_t current_batch_size = x.row();
-    if (current_batch_size == 0) return Matrix_T<fp32>(0,0);
+    if (current_batch_size == 0) return Matrix_T<fp32>(0, 0);
 
     Matrix_T<fp32> current_input = x;
     Matrix_T<fp32> layer_output(0, 0);
 
-    for (uint64_t i = 0; i< _layers.size(); i++) {
-        auto& layer = _layers[i];
+    for (uint64_t i = 0; i < _layers.size(); i++) {
+        auto &layer = _layers[i];
 
         uint64_t current_output_dim = layer->get_out_dim();
 
@@ -58,15 +58,16 @@ Matrix_T<fp32> Model::forward_batch(const Matrix_T<fp32>& x) {
     return layer_output;
 }
 
-Matrix_T<fp32> Model::backward_batch(const Matrix_T<fp32>& y) { // loss를 받음
+Matrix_T<fp32> Model::backward_batch(const Matrix_T<fp32> &y) {
+    // loss를 받음
     const uint64_t current_batch_size = y.row();
-    if (current_batch_size == 0) return Matrix_T<fp32>(0,0);
+    if (current_batch_size == 0) return Matrix_T<fp32>(0, 0);
 
     Matrix_T<fp32> current_grad = y;
-    Matrix_T<fp32> grad_output(0,0);
+    Matrix_T<fp32> grad_output(0, 0);
 
-    for (int i = _layers.size() - 1; i>= 0; i--) {
-        auto& layer = _layers[i];
+    for (int i = _layers.size() - 1; i >= 0; i--) {
+        auto &layer = _layers[i];
 
         // Determine the input dimension for the current layer to correctly size grad_output.
         // Based on the init() logic, layer 0 has `_input_dim` and all others have `_hidden_dim`.
@@ -77,10 +78,10 @@ Matrix_T<fp32> Model::backward_batch(const Matrix_T<fp32>& y) { // loss를 받�
         }
 
         layer->backward(current_grad, grad_output);
-        
+
         std::swap(current_grad, grad_output);
     }
-    for (auto& layer : _layers) {
+    for (auto &layer: _layers) {
         layer->update();
     }
     return current_grad;

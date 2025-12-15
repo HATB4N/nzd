@@ -1,6 +1,5 @@
 #ifndef TRAIN_H
 #define TRAIN_H
-
 #include "Core/Model.h"
 #include "Utils/Mnist.h"
 #include <vector>
@@ -16,6 +15,7 @@ public:
     void train_one_epoch();
     int init();
     void test();
+
 private:
     std::unique_ptr<Model> _model;
     uint64_t _total_data;
@@ -31,5 +31,4 @@ private:
     Matrix_T<fp32> _get_label_batch_onehot();
     uint64_t _current_idx = 0;
 };
-
 #endif // TRAIN_H

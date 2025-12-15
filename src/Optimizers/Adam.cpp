@@ -2,5 +2,4 @@
 // 미구현
 
 void Adam::step() {
-
 }

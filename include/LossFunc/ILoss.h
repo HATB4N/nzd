@@ -7,8 +7,8 @@
 class ILoss {
 public:
     virtual ~ILoss() = default;
-    virtual fp32 calculate(const Matrix_T<fp32>& y_pred, const Matrix_T<fp32>& y_true) = 0;
-    virtual void backward(const Matrix_T<fp32>& y_pred, const Matrix_T<fp32>& y_true, Matrix_T<fp32>& gradient) = 0;
+    virtual fp32 calculate(const Matrix_T<fp32> &y_pred, const Matrix_T<fp32> &y_true) = 0;
+    virtual void backward(const Matrix_T<fp32> &y_pred, const Matrix_T<fp32> &y_true, Matrix_T<fp32> &gradient) = 0;
 };
 
 #endif // ILOSS_H

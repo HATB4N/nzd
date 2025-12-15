@@ -11,15 +11,16 @@ class DenseLayer;
 
 class Adam : public IOptimizer {
 public:
-    explicit Adam(Matrix_T<fp32>& W,
-                  Matrix_T<fp32>& b,
-                  Matrix_T<fp32>& dW,
-                  Matrix_T<fp32>& db) : IOptimizer(W, b, dW, db) {}
+    explicit Adam(Matrix_T<fp32> &W,
+                  Matrix_T<fp32> &b,
+                  Matrix_T<fp32> &dW,
+                  Matrix_T<fp32> &db) : IOptimizer(W, b, dW, db) {
+    }
+
     void init() { return; }
     void step();
 
 private:
-
 };
 
 #endif // ADAM_H

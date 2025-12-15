@@ -9,30 +9,35 @@
 #include <memory_resource>
 
 enum class Ori { NT, T };
+
 enum class View { NT, T };
 
-template <typename T>
+template<typename T>
 class Matrix_T {
 public:
-    Matrix_T(uint64_t row, uint64_t col, Ori init = Ori::NT, std::pmr::memory_resource* resource = std::pmr::get_default_resource())
-    : _row(row), _col(col), _primary(init), _m(resource), _m_t(resource) {} // I just learn this cool init method
+    Matrix_T(uint64_t row, uint64_t col, Ori init = Ori::NT,
+             std::pmr::memory_resource *resource = std::pmr::get_default_resource())
+        : _row(row), _col(col), _primary(init), _m(resource), _m_t(resource) {
+    } // I just learn this cool init method
 
     // load parms에서 사용하는 생성자임.
-    Matrix_T(uint64_t row, uint64_t col, const std::vector<T>& data_vec, Ori init = Ori::NT, std::pmr::memory_resource* resource = std::pmr::get_default_resource())
-    : _m(data_vec.begin(), data_vec.end(), resource), get_NT(true), _row(row), _col(col), _primary(init), _m_t(resource) {
+    Matrix_T(uint64_t row, uint64_t col, const std::vector<T> &data_vec, Ori init = Ori::NT,
+             std::pmr::memory_resource *resource = std::pmr::get_default_resource())
+        : _m(data_vec.begin(), data_vec.end(), resource), get_NT(true), _row(row), _col(col), _primary(init),
+          _m_t(resource) {
         if (data_vec.size() != row * col) {
             throw std::invalid_argument("data_vec size does not match row * col");
         }
     }
-    
-    template <typename U>
-    Matrix_T<U> cast(std::pmr::memory_resource* resource = std::pmr::get_default_resource()) {
-        const auto& src_data = this->data(View::NT);
+
+    template<typename U>
+    Matrix_T<U> cast(std::pmr::memory_resource *resource = std::pmr::get_default_resource()) {
+        const auto &src_data = this->data(View::NT);
 
         std::vector<U> new_data;
         new_data.resize(src_data.size());
 
-        #pragma omp simd
+#pragma omp simd
         for (size_t i = 0; i < src_data.size(); ++i) {
             new_data[i] = static_cast<U>(src_data[i]);
         }
@@ -45,25 +50,29 @@ public:
     uint64_t col() const { return _col; }
     uint64_t row(View v) const { return (v == View::NT) ? _row : _col; }
     uint64_t col(View v) const { return (v == View::NT) ? _col : _row; }
+
     static View flip(View v) { return (v == View::NT) ? View::T : View::NT; }
-    
-    std::pmr::vector<T>& data(View view = View::NT) {
+
+    std::pmr::vector<T> &data(View view = View::NT) {
         if (view == View::NT) {
             if (expired_NT) {
                 _transpose_from_t();
             }
-            if (!get_NT) { // First time access
+            if (!get_NT) {
+                // First time access
                 _m.resize(size());
                 get_NT = true;
             }
             expired_T = true;
             expired_NT = false;
             return _m;
-        } else { // view == View::T
+        } else {
+            // view == View::T
             if (expired_T) {
                 _transpose_from_nt();
             }
-            if (!get_T) { // first access
+            if (!get_T) {
+                // first access
                 _m_t.resize(size());
                 get_T = true;
             }
@@ -73,23 +82,24 @@ public:
         }
     }
 
-    const std::pmr::vector<T>& data(View view = View::NT) const {
+    const std::pmr::vector<T> &data(View view = View::NT) const {
         if (view == View::NT) {
             if (expired_NT) {
-                const_cast<Matrix_T*>(this)->_transpose_from_t();
+                const_cast<Matrix_T *>(this)->_transpose_from_t();
             }
             if (!get_NT) {
-                const_cast<Matrix_T*>(this)->_m.resize(size());
-                const_cast<Matrix_T*>(this)->get_NT = true;
+                const_cast<Matrix_T *>(this)->_m.resize(size());
+                const_cast<Matrix_T *>(this)->get_NT = true;
             }
             return _m;
-        } else { // view == View::T
+        } else {
+            // view == View::T
             if (expired_T) {
-                const_cast<Matrix_T*>(this)->_transpose_from_nt();
+                const_cast<Matrix_T *>(this)->_transpose_from_nt();
             }
             if (!get_T) {
-                const_cast<Matrix_T*>(this)->_m_t.resize(size());
-                const_cast<Matrix_T*>(this)->get_T = true;
+                const_cast<Matrix_T *>(this)->_m_t.resize(size());
+                const_cast<Matrix_T *>(this)->get_T = true;
             }
             return _m_t;
         }
@@ -103,22 +113,24 @@ private:
     uint64_t _row, _col; // based on _m (not _m_t)
     Ori _primary;
 
-    void _transpose_from_nt() { // _m_t를 채우는 것
+    void _transpose_from_nt() {
+        // _m_t를 채우는 것
         if (_m_t.size() != size()) _m_t.resize(size());
-        for(uint64_t r = 0; r< _row; ++r) {
-            for(uint64_t c = 0; c< _col; ++c) {
-                _m_t[c*_row + r] = _m[r*_col + c];
+        for (uint64_t r = 0; r < _row; ++r) {
+            for (uint64_t c = 0; c < _col; ++c) {
+                _m_t[c * _row + r] = _m[r * _col + c];
             }
         }
         get_T = true;
         expired_T = false;
     }
 
-    void _transpose_from_t() { // _m을 채우는 것
+    void _transpose_from_t() {
+        // _m을 채우는 것
         if (_m.size() != size()) _m.resize(size());
-        for(uint64_t r = 0; r< _row; ++r) {
-            for(uint64_t c = 0; c< _col; ++c) {
-                _m[r*_col + c] = _m_t[c*_row + r];
+        for (uint64_t r = 0; r < _row; ++r) {
+            for (uint64_t c = 0; c < _col; ++c) {
+                _m[r * _col + c] = _m_t[c * _row + r];
             }
         }
         get_NT = true;

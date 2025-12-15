@@ -3,13 +3,13 @@
 #include <cassert>
 #include <numeric>
 
-fp32 CrossEntropy::calculate(const Matrix_T<fp32>& y_pred, const Matrix_T<fp32>& y_true) {
+fp32 CrossEntropy::calculate(const Matrix_T<fp32> &y_pred, const Matrix_T<fp32> &y_true) {
     assert(y_pred.row() == y_true.row() && y_pred.col() == y_true.col());
 
     uint64_t batch_size = y_pred.row();
     uint64_t num_classes = y_pred.col();
-    const auto& y_pred_data = y_pred.data(View::NT);
-    const auto& y_true_data = y_true.data(View::NT);
+    const auto &y_pred_data = y_pred.data(View::NT);
+    const auto &y_true_data = y_true.data(View::NT);
 
     fp32 total_loss = 0.0f;
     const fp32 epsilon = 1e-9f; // -inf 방지
@@ -27,14 +27,14 @@ fp32 CrossEntropy::calculate(const Matrix_T<fp32>& y_pred, const Matrix_T<fp32>&
     return total_loss / static_cast<fp32>(batch_size); // 배치의 평균 손실을 반환
 }
 
-void CrossEntropy::backward(const Matrix_T<fp32>& y_pred, const Matrix_T<fp32>& y_true, Matrix_T<fp32>& gradient) {
+void CrossEntropy::backward(const Matrix_T<fp32> &y_pred, const Matrix_T<fp32> &y_true, Matrix_T<fp32> &gradient) {
     assert(y_pred.row() == y_true.row() && y_pred.col() == y_true.col());
     assert(gradient.row() == y_pred.row() && gradient.col() == y_pred.col());
 
     size_t total_size = y_pred.size();
-    const auto& y_pred_data = y_pred.data(View::NT);
-    const auto& y_true_data = y_true.data(View::NT);
-    auto& grad_data = gradient.data(View::NT);
+    const auto &y_pred_data = y_pred.data(View::NT);
+    const auto &y_true_data = y_true.data(View::NT);
+    auto &grad_data = gradient.data(View::NT);
 
     // 역전파의 시작 그래디언트는 (예측값 - 실제값)
     for (uint64_t i = 0; i < total_size; ++i) {

@@ -4,9 +4,7 @@
 #include <memory>
 #include "Common/Matrix.h"
 
-// class Matrix;
-
-// singleton insatance
-Matrix& gemm();
+// singleton instance
+Matrix &gemm();
 
 #endif // NZD_GEMM_H

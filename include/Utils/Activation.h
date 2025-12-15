@@ -33,7 +33,7 @@ namespace ActDifr {
     void difr_l_relu(Matrix_T<fp32> &m1);
 };
 
-using ActFunc = void(*)(Matrix_T<fp32>&);
+using ActFunc = void(*)(Matrix_T<fp32> &);
 
 ActFunc resolve_act(ActType);
 ActFunc resolve_act_difr(ActType);
